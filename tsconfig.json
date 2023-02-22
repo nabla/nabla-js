@@ -1,0 +1,27 @@
+{
+  // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "module": "ES2022",
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+
+    /* Options for bundlers & React integration  */
+    "jsx": "react-jsx",
+    "skipLibCheck": true, // Report mostly false positive
+    "moduleResolution": "node", // Allow `index` imports
+    "resolveJsonModule": true, // Allow json import
+    "forceConsistentCasingInFileNames": true, // Avoid difference in case between file name and import
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    // esbuild compilation
+    "noEmit": true,
+    "isolatedModules": true,
+
+    /* Maximum linting in TS */
+    "strict": true, // Enable all strict type-checking options
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true // Report errors for fallthrough cases in switch statement
+  }
+}
