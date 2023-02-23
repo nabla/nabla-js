@@ -9,3 +9,4 @@ export class CurrentUserAlreadySetError extends AuthenticationError {
     super();
   }
 }
+export class UserIdNotSetError extends AuthenticationError {}

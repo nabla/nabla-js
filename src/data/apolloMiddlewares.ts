@@ -1,19 +1,19 @@
 import { ApolloLink } from "@apollo/client/core";
 import { setContext } from "@apollo/client/link/context";
 
-import { SessionTokenProvider } from "./../domain/sessiontokenprovider";
+import { SessionRepository } from "./../domain/boundaries";
 
-export const authMiddleware = (sessionTokenProvider: SessionTokenProvider) =>
+export const authMiddleware = (sessionRepository: SessionRepository) =>
   setContext(async (_, { headers }) => {
-    const tokens = await sessionTokenProvider();
+    const accessToken = await sessionRepository.getFreshAccessToken();
     return {
       ...headers,
-      "X-Nabla-Authorization": `Bearer ${tokens.accessToken}`,
+      "X-Nabla-Authorization": `Bearer ${accessToken}`,
     };
   });
 
-export const publicApiKeyMiddleware = (publicApiKey: string) => {
-  return new ApolloLink((operation, forward) => {
+export const publicApiKeyMiddleware = (publicApiKey: string) =>
+  new ApolloLink((operation, forward) => {
     operation.setContext(({ headers = {} }) => ({
       headers: {
         ...headers,
@@ -23,12 +23,11 @@ export const publicApiKeyMiddleware = (publicApiKey: string) => {
 
     return forward(operation);
   });
-};
 
 export const userHeadersMiddleware = (
   additionalHeaders?: Map<string, string>,
-) => {
-  return new ApolloLink((operation, forward) => {
+) =>
+  new ApolloLink((operation, forward) => {
     if (additionalHeaders) {
       operation.setContext(({ headers = {} }) => ({
         headers: {
@@ -40,4 +39,15 @@ export const userHeadersMiddleware = (
 
     return forward(operation);
   });
-};
+
+export const acceptLanguageMiddleware = () =>
+  new ApolloLink((operation, forward) => {
+    operation.setContext(({ headers = {} }) => ({
+      headers: {
+        ...headers,
+        "Accept-Language": navigator.language,
+      },
+    }));
+
+    return forward(operation);
+  });

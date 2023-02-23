@@ -56,7 +56,7 @@ export class NablaClient {
   };
 
   public clearCurrentUser = async () => {
-    await this.coreContainer.sessionLocalDataCleaner.cleanLocalSessionData();
+    await this.coreContainer.sessionLocalDataCleaner();
   };
 
   public static getInstance(): NablaClient {
