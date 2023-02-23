@@ -2,3 +2,4 @@
 node_modules/
 dist/
 src/__generated__
+src/messaging/__generated__

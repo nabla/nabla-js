@@ -1,4 +1,4 @@
-import { Logger } from "./../domain/boundaries/logger";
+import { Logger } from "./../domain/boundaries";
 
 export const consoleLogger: Logger = {
   debug: (message: string, error?: Error) => {

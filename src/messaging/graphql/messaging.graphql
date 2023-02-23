@@ -1,0 +1,362 @@
+mutation CreateConversation(
+  $title: String
+  $providerIds: [UUID!]
+  $initialMessage: SendMessageInput
+) {
+  createConversation(
+    title: $title
+    providerIds: $providerIds
+    initialMessage: $initialMessage
+  ) {
+    conversation {
+      ...ConversationFragment
+      items(page: { cursor: null, numberOfItems: 1 }) {
+        data {
+          ...MessageFragment
+        }
+      }
+    }
+  }
+}
+
+mutation SendMessage($conversationId: UUID!, $input: SendMessageInput!) {
+  sendMessageV2(conversationId: $conversationId, input: $input) {
+    message {
+      ...MessageFragment
+      conversation {
+        ...ConversationPreviewFragment
+      }
+    }
+  }
+}
+
+mutation DeleteMessage($messageId: UUID!) {
+  deleteMessage(id: $messageId) {
+    message {
+      id
+      content {
+        ...MessageContentFragment
+      }
+      conversation {
+        ...ConversationPreviewFragment
+      }
+    }
+  }
+}
+
+mutation MaskAsSeen($conversationId: UUID!) {
+  markAsSeen(conversationId: $conversationId) {
+    __typename
+    conversation {
+      ...ConversationPreviewFragment
+    }
+  }
+}
+
+mutation SetTyping($conversationId: UUID!, $isTyping: Boolean!) {
+  setTyping(conversationId: $conversationId, isTyping: $isTyping) {
+    __typename
+  }
+}
+
+query ConversationItems($id: UUID!, $pageInfo: OpaqueCursorPage!) {
+  conversation(id: $id) {
+    conversation {
+      id
+      ...ConversationItemsPageFragment
+    }
+  }
+}
+
+query Conversation($id: UUID!) {
+  conversation(id: $id) {
+    conversation {
+      ...ConversationFragment
+    }
+  }
+}
+
+query Conversations($pageInfo: OpaqueCursorPage!) {
+  conversations(page: $pageInfo) {
+    conversations {
+      ...ConversationFragment
+    }
+    hasMore
+    nextCursor
+  }
+}
+
+subscription ConversationsEvents {
+  conversations {
+    event {
+      ... on ConversationCreatedEvent {
+        conversation {
+          ...ConversationFragment
+        }
+      }
+      ... on ConversationUpdatedEvent {
+        conversation {
+          ...ConversationFragment
+        }
+      }
+      ... on ConversationDeletedEvent {
+        conversationId
+      }
+    }
+  }
+}
+
+subscription ConversationEvents($conversationId: UUID!) {
+  conversation(id: $conversationId) {
+    event {
+      ... on MessageCreatedEvent {
+        message {
+          ...MessageFragment
+        }
+      }
+      ... on MessageUpdatedEvent {
+        message {
+          ...MessageFragment
+        }
+      }
+      ... on TypingEvent {
+        provider {
+          ...ProviderInConversationFragment
+        }
+      }
+      ... on ConversationActivityCreated {
+        activity {
+          ...ConversationActivityFragment
+        }
+      }
+    }
+  }
+}
+
+fragment ConversationFragment on Conversation {
+  id
+  title
+  subtitle
+  createdAt
+  updatedAt
+  inboxPreviewTitle
+  lastMessagePreview
+  unreadMessageCount
+  providers {
+    ...ProviderInConversationFragment
+  }
+  pictureUrl {
+    ...EphemeralUrlFragment
+  }
+  isLocked
+}
+
+fragment ConversationPreviewFragment on Conversation {
+  id
+  updatedAt
+  inboxPreviewTitle
+  lastMessagePreview
+  unreadMessageCount
+}
+
+fragment ConversationItemsPageFragment on Conversation {
+  items(page: $pageInfo) {
+    data {
+      ...ConversationActivityFragment
+      ...MessageFragment
+    }
+    hasMore
+    nextCursor
+  }
+}
+
+fragment ConversationActivityFragment on ConversationActivity {
+  id
+  conversation {
+    id
+  }
+  createdAt
+  activityTime
+  conversationActivityContent: content {
+    ...ConversationActivityContentFragment
+  }
+}
+
+fragment ConversationActivityContentFragment on ConversationActivityContent {
+  ... on ProviderJoinedConversation {
+    provider {
+      ...MaybeProviderFragment
+    }
+  }
+  ... on ConversationClosed {
+    __typename
+  }
+  ... on ConversationReopened {
+    __typename
+  }
+}
+
+fragment MaybeProviderFragment on MaybeProvider {
+  ... on Provider {
+    ...ProviderFragment
+  }
+  ... on DeletedProvider {
+    empty: _
+  }
+}
+
+fragment MessageFragment on Message {
+  ...MessageSummaryFragment
+  replyTo {
+    ...MessageSummaryFragment
+  }
+}
+
+fragment LivekitRoomMessageContentFragment on LivekitRoomMessageContent {
+  livekitRoom {
+    ...LivekitRoomFragment
+  }
+}
+
+fragment MessageSummaryFragment on Message {
+  id
+  author {
+    ... on Provider {
+      ...ProviderFragment
+    }
+    ... on Patient {
+      ...PatientFragment
+    }
+    ... on System {
+      ...SystemFragment
+    }
+    ... on DeletedProvider {
+      empty: _
+    }
+  }
+  messageContent: content {
+    ...MessageContentFragment
+  }
+  clientId
+  conversation {
+    id
+  }
+  createdAt
+}
+
+fragment MessageContentFragment on MessageContent {
+  ... on TextMessageContent {
+    ...TextMessageContentFragment
+  }
+  ... on ImageMessageContent {
+    ...ImageMessageContentFragment
+  }
+  ... on VideoMessageContent {
+    ...VideoMessageContentFragment
+  }
+  ... on DocumentMessageContent {
+    ...DocumentMessageContentFragment
+  }
+  ... on AudioMessageContent {
+    ...AudioMessageContentFragment
+  }
+  ... on LivekitRoomMessageContent {
+    ...LivekitRoomMessageContentFragment
+  }
+  ... on DeletedMessageContent {
+    empty: _
+  }
+}
+
+fragment ProviderInConversationFragment on ProviderInConversation {
+  id
+  provider {
+    ...ProviderFragment
+  }
+  typingAt
+  seenUntil
+}
+
+fragment SystemFragment on System {
+  name
+  avatar {
+    id
+    url {
+      ...EphemeralUrlFragment
+    }
+  }
+}
+
+fragment TextMessageContentFragment on TextMessageContent {
+  text
+}
+
+fragment ImageMessageContentFragment on ImageMessageContent {
+  imageFileUpload {
+    ...ImageFileUploadFragment
+  }
+}
+
+fragment VideoMessageContentFragment on VideoMessageContent {
+  videoFileUpload {
+    ...VideoFileUploadFragment
+  }
+}
+
+fragment DocumentMessageContentFragment on DocumentMessageContent {
+  title
+  documentFileUpload {
+    ...DocumentFileUploadFragment
+  }
+}
+
+fragment AudioMessageContentFragment on AudioMessageContent {
+  audioFileUpload {
+    ...AudioFileUploadFragment
+  }
+}
+
+fragment ImageFileUploadFragment on ImageFileUpload {
+  id
+  url {
+    ...EphemeralUrlFragment
+  }
+  fileName
+  mimeType
+  width
+  height
+}
+
+fragment VideoFileUploadFragment on VideoFileUpload {
+  id
+  url {
+    ...EphemeralUrlFragment
+  }
+  fileName
+  mimeType
+  durationMs
+  width
+  height
+}
+
+fragment DocumentFileUploadFragment on DocumentFileUpload {
+  id
+  url {
+    ...EphemeralUrlFragment
+  }
+  fileName
+  mimeType
+  thumbnail {
+    ...ImageFileUploadFragment
+  }
+}
+
+fragment AudioFileUploadFragment on AudioFileUpload {
+  id
+  url {
+    ...EphemeralUrlFragment
+  }
+  fileName
+  mimeType
+  durationMs
+}

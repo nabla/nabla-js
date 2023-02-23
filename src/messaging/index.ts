@@ -1,1 +1,1 @@
-export { NablaMessagingClient } from "./messagingClient";
+export { NablaMessagingClient } from "./NablaMessagingClient";

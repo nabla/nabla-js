@@ -1,12 +1,17 @@
-import { MissingInitializeError } from "./domain/errors";
-import { CoreContainer } from "./injection/corecontainer";
-import { Configuration } from "./configuration";
-import { NetworkConfiguration } from "./networkConfiguration";
+import { Logger } from "./domain/boundaries";
+import {
+  CurrentUserAlreadySetError,
+  MissingInitializeError,
+} from "./domain/errors";
+import { SessionTokenProvider } from "./domain/sessiontokenprovider";
+import { CoreContainer } from "./injection/CoreContainer";
 
 export class NablaClient {
+  // This variable is referenced by its name by sub-clients
+  // Do not rename it without renaming the references
   private coreContainer: CoreContainer;
 
-  constructor(
+  private constructor(
     name: string,
     configuration: Configuration,
     networkConfiguration: NetworkConfiguration,
@@ -41,6 +46,19 @@ export class NablaClient {
     return client;
   }
 
+  public setCurrentUserOrThrow = (patientId: string) => {
+    const existingPatientId =
+      this.coreContainer.patientRepository.getPatientId();
+    if (existingPatientId !== undefined && existingPatientId !== patientId) {
+      throw new CurrentUserAlreadySetError(existingPatientId, patientId);
+    }
+    this.coreContainer.patientRepository.setPatientId(patientId);
+  };
+
+  public clearCurrentUser = async () => {
+    await this.coreContainer.sessionLocalDataCleaner.cleanLocalSessionData();
+  };
+
   public static getInstance(): NablaClient {
     if (!NablaClient._defaultInstance) throw MissingInitializeError;
 
@@ -49,6 +67,17 @@ export class NablaClient {
 
   private static defaultClientName = "defaultNablaClientName";
 }
+
+export type Configuration = {
+  publicApiKey: string;
+  sessionTokenProvider: SessionTokenProvider;
+  logger?: Logger;
+};
+
+export type NetworkConfiguration = {
+  baseUrl: string;
+  additionalHeaders?: Map<string, string>;
+};
 
 export type InitializationParameters = {
   configuration: Configuration;

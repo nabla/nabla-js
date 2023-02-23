@@ -1,8 +1,12 @@
-export type { Configuration } from "./configuration";
-export type { AuthTokens } from "./domain/authtokens";
-export type { Logger } from "./domain/boundaries/logger";
+export type { Logger } from "./domain/boundaries";
 export * from "./domain/errors";
-export type { SessionTokenProvider } from "./domain/sessiontokenprovider";
-export { NablaClient } from "./nablaClient";
-export type { InitializationParameters } from "./nablaClient";
-export type { NetworkConfiguration } from "./networkConfiguration";
+export type {
+  AuthTokens,
+  SessionTokenProvider,
+} from "./domain/sessiontokenprovider";
+export { NablaClient } from "./nablaclient";
+export type {
+  Configuration,
+  InitializationParameters,
+  NetworkConfiguration,
+} from "./nablaclient";
