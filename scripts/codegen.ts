@@ -5,12 +5,13 @@ await generate({
   schema: "./../../graphql/patient/patient-sdk.graphql",
   config: {
     scalars: {
-      UUID: "string",
+      UUID: "GqlUuid",
       BigDecimal: "number",
       DateTime: "ISOString",
       TimeZone: "TimeZone",
     },
     strictScalars: true,
+    dedupeFragments: true,
   },
   generates: {
     "./src/__generated__/": {
@@ -18,6 +19,7 @@ await generate({
       preset: "client",
       presetConfig: {
         gqlTagName: "gql",
+        fragmentMasking: false,
       },
       plugins: [],
     },
@@ -29,6 +31,7 @@ await generate({
       preset: "client",
       presetConfig: {
         gqlTagName: "gql",
+        fragmentMasking: false,
       },
       plugins: [],
     },

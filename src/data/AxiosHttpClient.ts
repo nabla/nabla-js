@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosProgressEvent } from "axios";
+import axios, { AxiosError } from "axios";
 
 import {
   ApiCallOptions,
@@ -27,57 +27,39 @@ export class AxiosHttpClient implements HttpClient {
     }
   }
 
-  call = <Data>({
+  call = async <Data>({
     path,
     headers,
     params,
     data,
-    onUploadProgress,
-  }: ApiCallOptions): {
-    promise: Promise<APIResponse<Data>>;
-    cancel: () => void;
-  } => {
-    const source = axios.CancelToken.source();
+  }: ApiCallOptions): Promise<APIResponse<Data>> => {
+    const accessToken = await this.sessionRepository.getFreshAccessToken();
+    try {
+      const response = (await axios.request<Data>({
+        url: `${this.baseUrl}${path}`,
+        withCredentials: true,
+        method: data ? "POST" : "GET",
+        data,
+        params,
+        headers: {
+          "X-Nabla-Authorization": `Bearer ${accessToken}`,
+          "X-Nabla-API-Key": this.publicApiKey,
+          "Accept-Language": navigator.language,
+          ...this.additionalHeaders,
+          ...headers,
+        },
+      })) as APIResponse<Data>;
 
-    const promise = this.sessionRepository
-      .getFreshAccessToken()
-      .then((accessToken) =>
-        axios
-          .request<Data>({
-            url: `${this.baseUrl}${path}`,
-            withCredentials: true,
-            method: data ? "POST" : "GET",
-            data,
-            params,
-            cancelToken: source.token,
-            headers: {
-              "X-Nabla-Authorization": `Bearer ${accessToken}`,
-              "X-Nabla-API-Key": this.publicApiKey,
-              "Accept-Language": navigator.language,
-              ...this.additionalHeaders,
-              ...headers,
-            },
-            onUploadProgress: onUploadProgress
-              ? (e: AxiosProgressEvent) =>
-                  e.total &&
-                  onUploadProgress(Math.round((e.loaded * 100) / e.total))
-              : undefined,
-          })
-          .then((response) => {
-            (response as APIResponse<Data>).requestId =
-              response.headers["x-request-id"];
-            return response as APIResponse<Data>;
-          })
-          .catch((e: AxiosError) => {
-            if (e.response) {
-              (e as APIError).requestId = e.response.headers["x-request-id"];
-              (e as APIError).is401 = e.response.status === 401;
-            }
-            if (axios.isCancel(e)) (e as APIError).isCanceled = true;
-            throw e;
-          }),
-      );
+      response.requestId = response.headers["x-request-id"];
 
-    return { promise, cancel: source.cancel };
+      return response;
+    } catch (e) {
+      if (e instanceof AxiosError && e.response) {
+        (e as APIError).requestId = e.response.headers["x-request-id"];
+        (e as APIError).is401 = e.response.status === 401;
+      }
+
+      throw e;
+    }
   };
 }

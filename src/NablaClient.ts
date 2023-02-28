@@ -1,9 +1,6 @@
 import { Logger } from "./domain/boundaries";
-import {
-  CurrentUserAlreadySetError,
-  MissingInitializeError,
-} from "./domain/errors";
-import { SessionTokenProvider } from "./domain/sessiontokenprovider";
+import { CurrentUserAlreadySetError } from "./domain/errors";
+import { SessionTokenProvider } from "./domain/SessionTokenProvider";
 import { CoreContainer } from "./injection/CoreContainer";
 
 export class NablaClient {
@@ -11,39 +8,16 @@ export class NablaClient {
   // Do not rename it without renaming the references
   private coreContainer: CoreContainer;
 
-  private constructor(
-    name: string,
-    configuration: Configuration,
-    networkConfiguration: NetworkConfiguration,
-  ) {
+  constructor({
+    configuration,
+    name = NablaClient.defaultClientName,
+    networkConfiguration = DefaultNetworkConfiguration,
+  }: InitializationParameters) {
     this.coreContainer = new CoreContainer(
       name,
       configuration,
       networkConfiguration,
     );
-  }
-
-  private static _defaultInstance: undefined | NablaClient;
-
-  public static initialize({
-    configuration,
-    name = NablaClient.defaultClientName,
-    networkConfiguration = DefaultNetworkConfiguration,
-  }: InitializationParameters): NablaClient {
-    const client = new NablaClient(name, configuration, networkConfiguration);
-
-    if (name === NablaClient.defaultClientName) {
-      if (this._defaultInstance) {
-        this._defaultInstance.coreContainer.logger.error(
-          "NablaClient.initialize() should only be called once for the default client name. " +
-            "Ignoring this call and using the previously created shared instance.",
-        );
-      } else {
-        this._defaultInstance = client;
-      }
-    }
-
-    return client;
   }
 
   public setCurrentUserOrThrow = (patientId: string) => {
@@ -58,12 +32,6 @@ export class NablaClient {
   public clearCurrentUser = async () => {
     await this.coreContainer.sessionLocalDataCleaner();
   };
-
-  public static getInstance(): NablaClient {
-    if (!NablaClient._defaultInstance) throw MissingInitializeError;
-
-    return NablaClient._defaultInstance;
-  }
 
   private static defaultClientName = "defaultNablaClientName";
 }

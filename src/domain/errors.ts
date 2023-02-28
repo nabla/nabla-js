@@ -10,3 +10,15 @@ export class CurrentUserAlreadySetError extends AuthenticationError {
   }
 }
 export class UserIdNotSetError extends AuthenticationError {}
+
+export class ServerError extends NablaError {
+  constructor(public message: string) {
+    super();
+  }
+}
+
+export class InternalError extends NablaError {
+  constructor(public message: string) {
+    super();
+  }
+}

@@ -1,4 +1,4 @@
-import { AuthTokens } from "./../../domain/sessiontokenprovider";
+import { AuthTokens } from "./../../domain/SessionTokenProvider";
 
 export class TokenLocalDataSource {
   private authTokens: undefined | AuthTokens;

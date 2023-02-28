@@ -3,10 +3,10 @@ export * from "./domain/errors";
 export type {
   AuthTokens,
   SessionTokenProvider,
-} from "./domain/sessiontokenprovider";
-export { NablaClient } from "./nablaclient";
+} from "./domain/SessionTokenProvider";
+export { NablaClient } from "./NablaClient";
 export type {
   Configuration,
   InitializationParameters,
   NetworkConfiguration,
-} from "./nablaclient";
+} from "./NablaClient";

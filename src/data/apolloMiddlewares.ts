@@ -4,13 +4,13 @@ import { setContext } from "@apollo/client/link/context";
 import { SessionRepository } from "./../domain/boundaries";
 
 export const authMiddleware = (sessionRepository: SessionRepository) =>
-  setContext(async (_, { headers }) => {
-    const accessToken = await sessionRepository.getFreshAccessToken();
-    return {
-      ...headers,
-      "X-Nabla-Authorization": `Bearer ${accessToken}`,
-    };
-  });
+  setContext(async (_, prevContext) => ({
+    ...prevContext,
+    headers: {
+      ...prevContext.headers,
+      "X-Nabla-Authorization": `Bearer ${await sessionRepository.getFreshAccessToken()}`,
+    },
+  }));
 
 export const publicApiKeyMiddleware = (publicApiKey: string) =>
   new ApolloLink((operation, forward) => {

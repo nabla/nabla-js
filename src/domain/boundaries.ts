@@ -16,6 +16,7 @@ export type PatientRepository = {
 export type SessionLocalDataCleaner = () => Promise<void>;
 
 export type SessionRepository = {
+  authenticatableOrThrow(): void;
   getFreshAccessToken(): Promise<string>;
 };
 
@@ -25,11 +26,7 @@ export type HttpClient = {
     headers,
     params,
     data,
-    onUploadProgress,
-  }: ApiCallOptions): {
-    promise: Promise<APIResponse<Data>>;
-    cancel: () => void;
-  };
+  }: ApiCallOptions): Promise<APIResponse<Data>>;
 };
 
 export type ApiCallOptions = {
@@ -37,7 +34,6 @@ export type ApiCallOptions = {
   headers?: { [key: string]: string };
   params?: Record<string, string>;
   data?: any;
-  onUploadProgress?: (percentage: number) => void;
 };
 
 export type APIResponse<Data> = AxiosResponse<Data> & {

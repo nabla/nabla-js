@@ -25,7 +25,7 @@ import {
   SessionLocalDataCleaner,
   SessionRepository,
 } from "./../domain/boundaries";
-import { Configuration, NetworkConfiguration } from "./../nablaclient";
+import { Configuration, NetworkConfiguration } from "./../NablaClient";
 
 export class CoreContainer {
   logger: Logger;
@@ -71,7 +71,7 @@ export class CoreContainer {
         .concat(authMiddleware(this.sessionRepository))
         .concat(
           new HttpLink({
-            uri: `${networkConfiguration.baseUrl}v3/patient/graphql/sdk/authenticated`,
+            uri: `${networkConfiguration.baseUrl}v1/patient/graphql/sdk/authenticated`,
           }),
         ),
       cache: new InMemoryCache(),

@@ -1,4 +1,14 @@
-import { NablaClient } from "./../nablaclient";
+import { UUID } from "uuidjs";
+
+import { NablaClient } from "./../NablaClient";
+import {
+  AudioMessageInput,
+  Conversation,
+  DocumentMessageInput,
+  ImageMessageInput,
+  TextMessageInput,
+  VideoMessageInput,
+} from "./domain/entities";
 import { MessagingContainer } from "./injection/MessagingContainer";
 
 export class NablaMessagingClient {
@@ -15,4 +25,22 @@ export class NablaMessagingClient {
       nablaClient["coreContainer"],
     );
   }
+
+  createConversationWithMessage = async (
+    messageInput:
+      | TextMessageInput
+      | ImageMessageInput
+      | VideoMessageInput
+      | DocumentMessageInput
+      | AudioMessageInput,
+    title?: string,
+    providerIds?: UUID[],
+  ): Promise<Conversation> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.createConversation(
+      messageInput,
+      title,
+      providerIds,
+    );
+  };
 }

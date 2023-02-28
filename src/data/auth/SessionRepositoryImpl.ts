@@ -9,7 +9,7 @@ import { UserIdNotSetError } from "./../../domain/errors";
 import {
   AuthTokens,
   SessionTokenProvider,
-} from "./../../domain/sessiontokenprovider";
+} from "./../../domain/SessionTokenProvider";
 import { TokenLocalDataSource } from "./TokenLocalDataSource";
 import { TokenRemoteDataSource } from "./TokenRemoteDataSource";
 
@@ -61,6 +61,10 @@ export class SessionRepositoryImpl implements SessionRepository {
       this.tokenAccessLock.release();
     }
   }
+
+  authenticatableOrThrow = () => {
+    if (!this.patientRepository.getPatientId()) throw new UserIdNotSetError();
+  };
 
   private renewAuthTokens = async (): Promise<AuthTokens> => {
     const patientId = this.patientRepository.getPatientId();

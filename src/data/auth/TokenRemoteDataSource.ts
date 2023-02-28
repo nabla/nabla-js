@@ -1,5 +1,5 @@
 import { HttpClient } from "./../../domain/boundaries";
-import { AuthTokens } from "./../../domain/sessiontokenprovider";
+import { AuthTokens } from "./../../domain/SessionTokenProvider";
 
 export class TokenRemoteDataSource {
   // Lazy here otherwise we have circular dependencies
@@ -8,12 +8,11 @@ export class TokenRemoteDataSource {
   refresh = async (refreshToken: string): Promise<AuthTokens> => {
     const httpClient = await this.httpClientPromise();
 
-    const { promise } = httpClient.call<RefreshTokenResponseData>({
+    const newTokens = await httpClient.call<RefreshTokenResponseData>({
       path: "v1/patient/jwt/refresh",
       data: { refresh_token: refreshToken },
     });
 
-    const newTokens = await promise;
     return {
       accessToken: newTokens.data.access_token,
       refreshToken: newTokens.data.refresh_token,
