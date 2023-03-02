@@ -1,5 +1,6 @@
 import { UUID } from "uuidjs";
 
+import { PaginatedContent, Watcher } from "./../domain/response";
 import { NablaClient } from "./../NablaClient";
 import {
   AudioMessageInput,
@@ -42,5 +43,10 @@ export class NablaMessagingClient {
       title,
       providerIds,
     );
+  };
+
+  watchConversations = (): Watcher<PaginatedContent<Conversation[]>> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.watchConversations();
   };
 }

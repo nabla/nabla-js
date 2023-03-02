@@ -66,6 +66,10 @@ export class SessionRepositoryImpl implements SessionRepository {
     if (!this.patientRepository.getPatientId()) throw new UserIdNotSetError();
   };
 
+  getCurrentAccessToken(): string | undefined {
+    return this.tokenLocalDataSource.getAuthTokens()?.accessToken;
+  }
+
   private renewAuthTokens = async (): Promise<AuthTokens> => {
     const patientId = this.patientRepository.getPatientId();
     if (!patientId) throw new UserIdNotSetError();

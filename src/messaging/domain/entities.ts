@@ -59,3 +59,8 @@ export type Provider = {
   firstName: string;
   lastName: string;
 };
+
+export type PaginatedList<T> = {
+  items: T[];
+  hasMore: boolean;
+};

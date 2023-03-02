@@ -1,5 +1,6 @@
 import { UUID } from "uuidjs";
 
+import { PaginatedContent, Watcher } from "./../../domain/response";
 import {
   AudioMessageInput,
   Conversation,
@@ -20,4 +21,6 @@ export type ConversationRepository = {
     title?: string,
     providerIds?: UUID[],
   ): Promise<Conversation>;
+
+  watchConversations(): Watcher<PaginatedContent<Conversation[]>>;
 };

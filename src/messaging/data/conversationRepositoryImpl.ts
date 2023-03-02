@@ -1,5 +1,10 @@
 import { UUID } from "uuidjs";
 
+import {
+  PaginatedContent,
+  Subscription,
+  Watcher,
+} from "./../../domain/response";
 import { ConversationRepository } from "./../domain/boundaries";
 import {
   AudioMessageInput,
@@ -43,4 +48,24 @@ export const conversationRepositoryImpl = (
       providerIdsInput,
     );
   },
+
+  watchConversations: (): Watcher<PaginatedContent<Conversation[]>> => ({
+    subscribe(
+      onNext: (value: PaginatedContent<Conversation[]>) => void,
+      onError: (error: any) => void,
+    ): Subscription {
+      return gqlConversationDataSource
+        .watchConversations()
+        .subscribe((response) => {
+          onNext({
+            content: response.items.sort(
+              (a, b) => b.lastModified.getTime() - a.lastModified.getTime(),
+            ),
+            loadMore: response.hasMore
+              ? gqlConversationDataSource.loadMoreConversationsInCache
+              : undefined,
+          });
+        }, onError);
+    },
+  }),
 });

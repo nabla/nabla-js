@@ -23,6 +23,7 @@ export class MessagingContainer {
 
     const gqlConversationDataSource = gqlConversationDataSourceImpl(
       coreContainer.apolloClient,
+      this.logger,
     );
     this.conversationRepository = conversationRepositoryImpl(
       gqlConversationDataSource,

@@ -18,6 +18,7 @@ export type SessionLocalDataCleaner = () => Promise<void>;
 export type SessionRepository = {
   authenticatableOrThrow(): void;
   getFreshAccessToken(): Promise<string>;
+  getCurrentAccessToken(): undefined | string;
 };
 
 export type HttpClient = {
