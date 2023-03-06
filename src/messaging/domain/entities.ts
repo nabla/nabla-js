@@ -62,6 +62,147 @@ export type Provider = {
   lastName: string;
 };
 
+export type ConversationItem = Message | ConversationActivity;
+
+type BaseConversationItem = {
+  createdAt: Date;
+};
+
+export type Message =
+  | TextMessage
+  | ImageMessage
+  | VideoMessage
+  | AudioMessage
+  | DocumentMessage
+  | DeletedMessage
+  | VideoCallRoom;
+
+type BaseMessage = BaseConversationItem & {
+  id: UUID;
+  sentAt: Date;
+  author: MessageAuthor;
+  replyTo?: BaseMessage;
+};
+
+export type TextMessage = BaseMessage & {
+  text: string;
+  kind: "text";
+};
+
+export type DeletedMessage = BaseMessage & {
+  kind: "deleted";
+};
+
+export type MediaMessage = BaseMessage & {
+  url: string;
+  mimetype: string;
+  fileName: string;
+};
+
+export type ImageMessage = MediaMessage & {
+  size?: Size;
+  kind: "image";
+};
+
+export type VideoMessage = MediaMessage & {
+  size?: Size;
+  durationMs?: number;
+  kind: "video";
+};
+
+export type DocumentMessage = MediaMessage & {
+  thumbnail?: {
+    size?: Size;
+    url: string;
+    mimetype: string;
+  };
+  kind: "document";
+};
+
+export type AudioMessage = MediaMessage & {
+  durationMs?: number;
+  kind: "audio";
+};
+
+export type ConversationActivity = BaseConversationItem & {
+  id: UUID;
+  activityTime: Date;
+  content: ProviderJoinedConversationActivityContent;
+};
+
+export type ProviderJoinedConversationActivityContent = {
+  maybeProvider: ExistingProvider | DeletedProvider;
+  kind: "providerJoinConversation";
+};
+
+export type ExistingProvider = Provider & {
+  kind: "existing";
+};
+
+export type DeletedProvider = {
+  kind: "deleted";
+};
+
+export type VideoCallRoom = BaseMessage & {
+  room: {
+    id: UUID;
+    status: VideoCallRoomStatusOpen | VideoCallRoomStatusClosed;
+  };
+  kind: "videoCallRoom";
+};
+
+export type VideoCallRoomStatusOpen = {
+  token: string;
+  url: string;
+  kind: "open";
+};
+
+export type VideoCallRoomStatusClosed = {
+  kind: "closed";
+};
+
+export type Size = {
+  width: number;
+  height: number;
+};
+
+export type MessageAuthor =
+  | ProviderMessageAuthor
+  | CurrentPatientMessageAuthor
+  | OtherPatientMessageAuthor
+  | SystemMessageAuthor
+  | DeletedProviderMessageAuthor
+  | UnknownMessageAuthor;
+
+export type ProviderMessageAuthor = {
+  provider: Provider;
+  kind: "provider";
+};
+
+export type CurrentPatientMessageAuthor = {
+  kind: "currentPatient";
+};
+
+export type OtherPatientMessageAuthor = {
+  id: UUID;
+  displayName: string;
+  kind: "otherPatient";
+};
+
+export type SystemMessageAuthor = {
+  name: string;
+  avatarUrl?: string;
+  kind: "system";
+};
+
+export type UnknownMessageAuthor = {
+  kind: "unknown";
+};
+
+export type DeletedProviderMessageAuthor = {
+  kind: "deletedProvider";
+};
+
 export type PaginatedList<T> = {
   items: T[];
   hasMore: boolean;

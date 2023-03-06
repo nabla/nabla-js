@@ -5,6 +5,7 @@ import { NablaClient } from "./../NablaClient";
 import {
   AudioMessageInput,
   Conversation,
+  ConversationItem,
   DocumentMessageInput,
   ImageMessageInput,
   TextMessageInput,
@@ -53,5 +54,12 @@ export class NablaMessagingClient {
   watchConversation = (id: UUID): Watcher<Conversation> => {
     this.messagingContainer.sessionRepository.authenticatableOrThrow();
     return this.messagingContainer.conversationRepository.watchConversation(id);
+  };
+
+  watchConversationItems = (
+    _id: UUID,
+  ): Watcher<PaginatedContent<ConversationItem[]>> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    throw new Error("NotImplemented");
   };
 }
