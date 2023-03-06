@@ -122,10 +122,8 @@ export class CoreContainer {
           ),
         ),
       cache: new InMemoryCache({
-        dataIdFromObject: (obj: any) =>
-          obj.uuid && obj.__typename
-            ? `${obj.__typename as string}:${obj.uuid as string}`
-            : undefined,
+        dataIdFromObject: (obj: { __typename?: string; id?: string }) =>
+          obj.id && obj.__typename ? `${obj.__typename}:${obj.id}` : undefined,
       }),
     });
 

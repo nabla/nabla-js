@@ -23,4 +23,6 @@ export type ConversationRepository = {
   ): Promise<Conversation>;
 
   watchConversations(): Watcher<PaginatedContent<Conversation[]>>;
+
+  watchConversation(id: UUID): Watcher<Conversation>;
 };

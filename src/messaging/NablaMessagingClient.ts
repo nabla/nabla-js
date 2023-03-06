@@ -49,4 +49,9 @@ export class NablaMessagingClient {
     this.messagingContainer.sessionRepository.authenticatableOrThrow();
     return this.messagingContainer.conversationRepository.watchConversations();
   };
+
+  watchConversation = (id: UUID): Watcher<Conversation> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.watchConversation(id);
+  };
 }

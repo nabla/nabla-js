@@ -50,6 +50,8 @@ export type ProviderInConversation = {
   provider: Provider;
   typingAt?: Date;
   seenUntil?: Date;
+
+  isTyping(): boolean;
 };
 
 export type Provider = {

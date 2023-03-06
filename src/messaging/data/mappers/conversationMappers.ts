@@ -12,6 +12,8 @@ import {
   ProviderInConversation,
 } from "./../../domain/entities";
 
+export const typingTimeWindowMs = 20_000;
+
 export const mapGqlConversationFragmentToConversation = (
   fragment: ConversationFragmentFragment,
 ): Conversation => ({
@@ -34,14 +36,21 @@ const mapProvidersInConversations = (
   providers.map((providerInConversationGql) => {
     const providerFragment = providerInConversationGql.provider;
 
+    const typingAt = providerInConversationGql.typingAt
+      ? mapISOStringToDate(providerInConversationGql.typingAt)
+      : undefined;
+
     return {
       provider: mapGqlProvider(providerFragment),
-      typingAt: providerInConversationGql.typingAt
-        ? mapISOStringToDate(providerInConversationGql.typingAt)
-        : undefined,
+      typingAt,
       seenUntil: providerInConversationGql.seenUntil
         ? mapISOStringToDate(providerInConversationGql.seenUntil)
         : undefined,
+      isTyping(): boolean {
+        if (!typingAt) return false;
+
+        return Date.now() - typingAt.getTime() < typingTimeWindowMs;
+      },
     };
   });
 
@@ -65,6 +74,30 @@ const mapGqlUuidToUUID = (gqlUuid: GqlUuid): UUID => {
   }
 
   return uuid;
+};
+
+export const findOldestTypingProviderTimestamp = (
+  providers: ProviderInConversation[],
+): number | undefined => {
+  // Sort typing providers by timestamps
+  const providerTypingAtTimestamps = providers
+    .map((providerInConversation) => {
+      if (!providerInConversation.isTyping()) return Number.MAX_SAFE_INTEGER;
+
+      return (
+        providerInConversation.typingAt?.getTime() ?? Number.MAX_SAFE_INTEGER
+      );
+    })
+    .sort((a, b) => a - b);
+
+  if (
+    providerTypingAtTimestamps.length > 0 &&
+    providerTypingAtTimestamps[0] !== Number.MAX_SAFE_INTEGER
+  ) {
+    return providerTypingAtTimestamps[0];
+  }
+
+  return undefined;
 };
 
 const removeUndefined = <S>(value: S | undefined): value is S =>

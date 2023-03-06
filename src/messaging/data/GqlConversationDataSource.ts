@@ -1,6 +1,14 @@
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client/core";
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  NormalizedCacheObject,
+} from "@apollo/client/core";
+import { UUID } from "uuidjs";
 
 import {
+  ConversationDocument,
+  ConversationEventsDocument,
+  ConversationQuery,
   ConversationsDocument,
   ConversationsEventsDocument,
   CreateConversationDocument,
@@ -11,7 +19,11 @@ import { Logger } from "./../../domain/boundaries";
 import { InternalError, ServerError } from "./../../domain/errors";
 import { Subscription, Watcher } from "./../../domain/response";
 import { Conversation, PaginatedList } from "./../domain/entities";
-import { mapGqlConversationFragmentToConversation } from "./mappers/conversationMappers";
+import {
+  findOldestTypingProviderTimestamp,
+  mapGqlConversationFragmentToConversation,
+  typingTimeWindowMs,
+} from "./mappers/conversationMappers";
 
 export type GqlConversationDataSource = {
   createConversation: (
@@ -23,6 +35,8 @@ export type GqlConversationDataSource = {
   watchConversations: () => Watcher<PaginatedList<Conversation>>;
 
   loadMoreConversationsInCache: () => Promise<void>;
+
+  watchConversation: (id: UUID) => Watcher<Conversation>;
 };
 
 export const gqlConversationDataSourceImpl = (
@@ -66,6 +80,16 @@ export const gqlConversationDataSourceImpl = (
       }
     },
   );
+
+  const subscribeToConversationEvents = (id: UUID): Subscription =>
+    apolloClient
+      .subscribe({
+        query: ConversationEventsDocument,
+        variables: {
+          conversationId: id.toString(),
+        },
+      })
+      .subscribe({}); // No-op as we don't have any side effects here
 
   return {
     createConversation: async (
@@ -167,6 +191,65 @@ export const gqlConversationDataSourceImpl = (
           };
         },
       );
+    },
+
+    watchConversation: (id: UUID): Watcher<Conversation> => {
+      let typingUpdateRefresher: number | undefined;
+      const handleResponse = (
+        response: ApolloQueryResult<ConversationQuery>,
+        onNext: (conversation: Conversation) => void,
+      ) => {
+        const conversation = mapGqlConversationFragmentToConversation(
+          response.data.conversation.conversation,
+        );
+
+        if (typingUpdateRefresher) clearTimeout(typingUpdateRefresher);
+
+        const typingProviderStartTimestamp = findOldestTypingProviderTimestamp(
+          conversation.providers,
+        );
+
+        if (typingProviderStartTimestamp) {
+          const startedTypingSinceMs =
+            Date.now() - typingProviderStartTimestamp;
+
+          // Not sure why TS consider the return type of setTimeout to be Node.Timeout
+          // While since we're in a browser it's an int.
+          // @ts-ignore
+          typingUpdateRefresher = setTimeout(() => {
+            handleResponse(response, onNext);
+          }, typingTimeWindowMs - startedTypingSinceMs);
+        }
+
+        onNext(conversation);
+      };
+
+      return {
+        subscribe(
+          onNext: (value: Conversation) => void,
+          onError: (error: any) => void,
+        ): Subscription {
+          const apolloWatcherSubscription = apolloClient
+            .watchQuery({
+              query: ConversationDocument,
+              variables: {
+                id: id.toString(),
+              },
+            })
+            .subscribe((response) => {
+              handleResponse(response, onNext);
+            }, onError);
+
+          const eventsSubscription = subscribeToConversationEvents(id);
+
+          return {
+            unsubscribe() {
+              apolloWatcherSubscription.unsubscribe();
+              eventsSubscription.unsubscribe();
+            },
+          };
+        },
+      };
     },
   };
 };

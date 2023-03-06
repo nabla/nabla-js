@@ -68,4 +68,7 @@ export const conversationRepositoryImpl = (
         }, onError);
     },
   }),
+
+  watchConversation: (id: UUID): Watcher<Conversation> =>
+    gqlConversationDataSource.watchConversation(id),
 });

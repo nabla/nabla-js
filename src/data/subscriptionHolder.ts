@@ -27,20 +27,14 @@ export const subscriptionHolder = <T>(
         .subscribe(
           (data) => {
             data.errors?.forEach((error) => {
-              logger.error(
-                "Error received in ConversationsEventsSubscription",
-                error,
-              );
+              logger.error("Error received in subscription", error);
             });
 
             if (sideEffects && data.data) sideEffects(data.data);
           },
           (error) => {
             // TODO resub auto?
-            logger.error(
-              "Terminating error received in ConversationsEventsSubscription",
-              error,
-            );
+            logger.error("Terminating error received in subscription", error);
           },
         );
 
