@@ -8,6 +8,7 @@ import { UUID } from "uuidjs";
 import {
   ConversationDocument,
   ConversationEventsDocument,
+  ConversationItemsDocument,
   ConversationQuery,
   ConversationsDocument,
   ConversationsEventsDocument,
@@ -18,10 +19,15 @@ import { subscriptionHolder } from "./../../data/subscriptionHolder";
 import { Logger } from "./../../domain/boundaries";
 import { InternalError, ServerError } from "./../../domain/errors";
 import { Subscription, Watcher } from "./../../domain/response";
-import { Conversation, PaginatedList } from "./../domain/entities";
+import {
+  Conversation,
+  ConversationItem,
+  PaginatedList,
+} from "./../domain/entities";
+import { mapToConversationItem } from "./mappers/conversationItemMappers";
 import {
   findOldestTypingProviderTimestamp,
-  mapGqlConversationFragmentToConversation,
+  mapToConversation,
   typingTimeWindowMs,
 } from "./mappers/conversationMappers";
 
@@ -37,6 +43,10 @@ export type GqlConversationDataSource = {
   loadMoreConversationsInCache: () => Promise<void>;
 
   watchConversation: (id: UUID) => Watcher<Conversation>;
+
+  watchConversationItems: (
+    id: UUID,
+  ) => Watcher<PaginatedList<ConversationItem>>;
 };
 
 export const gqlConversationDataSourceImpl = (
@@ -80,6 +90,16 @@ export const gqlConversationDataSourceImpl = (
       }
     },
   );
+  const defaultConversationItemsPageSize = 20;
+  const getDefaultConversationItemQueryOptions = (id: UUID) => ({
+    query: ConversationItemsDocument,
+    variables: {
+      id: id.toString(),
+      pageInfo: {
+        numberOfItems: defaultConversationItemsPageSize,
+      },
+    },
+  });
 
   const subscribeToConversationEvents = (id: UUID): Subscription =>
     apolloClient
@@ -111,7 +131,7 @@ export const gqlConversationDataSourceImpl = (
         throw new ServerError("Missing data for createConversation call");
       }
 
-      return mapGqlConversationFragmentToConversation(conversationData);
+      return mapToConversation(conversationData);
     },
 
     watchConversations: (): Watcher<PaginatedList<Conversation>> => ({
@@ -125,9 +145,7 @@ export const gqlConversationDataSourceImpl = (
             onNext({
               items: response.data.conversations.conversations.map(
                 (conversationFragment) =>
-                  mapGqlConversationFragmentToConversation(
-                    conversationFragment,
-                  ),
+                  mapToConversation(conversationFragment),
               ),
               hasMore: response.data.conversations.hasMore,
             });
@@ -199,7 +217,7 @@ export const gqlConversationDataSourceImpl = (
         response: ApolloQueryResult<ConversationQuery>,
         onNext: (conversation: Conversation) => void,
       ) => {
-        const conversation = mapGqlConversationFragmentToConversation(
+        const conversation = mapToConversation(
           response.data.conversation.conversation,
         );
 
@@ -251,5 +269,33 @@ export const gqlConversationDataSourceImpl = (
         },
       };
     },
+
+    watchConversationItems: (
+      id: UUID,
+    ): Watcher<PaginatedList<ConversationItem>> => ({
+      subscribe(
+        onNext: (value: PaginatedList<ConversationItem>) => void,
+        onError: (error: any) => void,
+      ): Subscription {
+        const apolloWatcherSubscription = apolloClient
+          .watchQuery(getDefaultConversationItemQueryOptions(id))
+          .subscribe((response) => {
+            onNext({
+              items: mapToConversationItem(
+                response.data.conversation.conversation.items.data,
+              ),
+              hasMore: response.data.conversation.conversation.items.hasMore,
+            });
+          }, onError);
+
+        // TODO subscription
+
+        return {
+          unsubscribe() {
+            apolloWatcherSubscription.unsubscribe();
+          },
+        };
+      },
+    }),
   };
 };

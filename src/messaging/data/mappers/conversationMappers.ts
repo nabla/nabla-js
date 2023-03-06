@@ -1,20 +1,18 @@
-import { UUID } from "uuidjs";
-
 import {
   ConversationFragmentFragment,
-  ProviderFragmentFragment,
   ProviderInConversationFragmentFragment,
 } from "./../../__generated__/graphql";
-import { InternalError } from "./../../../domain/errors";
+import { Conversation, ProviderInConversation } from "./../../domain/entities";
 import {
-  Conversation,
-  Provider,
-  ProviderInConversation,
-} from "./../../domain/entities";
+  mapGqlProvider,
+  mapGqlUuidToUUID,
+  mapISOStringToDate,
+  removeUndefined,
+} from "./common";
 
 export const typingTimeWindowMs = 20_000;
 
-export const mapGqlConversationFragmentToConversation = (
+export const mapToConversation = (
   fragment: ConversationFragmentFragment,
 ): Conversation => ({
   id: mapGqlUuidToUUID(fragment.id),
@@ -54,28 +52,6 @@ const mapProvidersInConversations = (
     };
   });
 
-const mapGqlProvider = (
-  providerFragment: ProviderFragmentFragment,
-): Provider => ({
-  id: mapGqlUuidToUUID(providerFragment.id),
-  avatarUrl: providerFragment.avatarUrl?.url,
-  prefix: providerFragment.prefix ?? undefined,
-  firstName: providerFragment.firstName,
-  lastName: providerFragment.lastName,
-});
-
-const mapISOStringToDate = (gqlIsoString: ISOString): Date =>
-  new Date(gqlIsoString);
-
-const mapGqlUuidToUUID = (gqlUuid: GqlUuid): UUID => {
-  const uuid = UUID.parse(gqlUuid);
-  if (!uuid) {
-    throw new InternalError(`Unable to parse UUID from GQL: ${gqlUuid}`);
-  }
-
-  return uuid;
-};
-
 export const findOldestTypingProviderTimestamp = (
   providers: ProviderInConversation[],
 ): number | undefined => {
@@ -99,6 +75,3 @@ export const findOldestTypingProviderTimestamp = (
 
   return undefined;
 };
-
-const removeUndefined = <S>(value: S | undefined): value is S =>
-  value !== undefined;

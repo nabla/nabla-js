@@ -9,13 +9,14 @@ import { ConversationRepository } from "./../domain/boundaries";
 import {
   AudioMessageInput,
   Conversation,
+  ConversationItem,
   DocumentMessageInput,
   ImageMessageInput,
   TextMessageInput,
   VideoMessageInput,
 } from "./../domain/entities";
 import { GqlConversationDataSource } from "./GqlConversationDataSource";
-import { mapMessageInputToSendMessageInput } from "./mappers/messageMappers";
+import { mapToSendMessageInput } from "./mappers/messageInputMappers";
 import { MessageFileUploader } from "./MessageFileUploader";
 
 export const conversationRepositoryImpl = (
@@ -33,10 +34,7 @@ export const conversationRepositoryImpl = (
     providerIds?: UUID[],
   ): Promise<Conversation> => {
     const gqlMessageInput = messageInput
-      ? await mapMessageInputToSendMessageInput(
-          messageFileUploader,
-          messageInput,
-        )
+      ? await mapToSendMessageInput(messageFileUploader, messageInput)
       : undefined;
 
     const providerIdsInput =
@@ -71,4 +69,24 @@ export const conversationRepositoryImpl = (
 
   watchConversation: (id: UUID): Watcher<Conversation> =>
     gqlConversationDataSource.watchConversation(id),
+
+  watchConversationItems: (
+    id: UUID,
+  ): Watcher<PaginatedContent<ConversationItem[]>> => ({
+    subscribe(
+      onNext: (value: PaginatedContent<ConversationItem[]>) => void,
+      onError: (error: any) => void,
+    ): Subscription {
+      return gqlConversationDataSource
+        .watchConversationItems(id)
+        .subscribe((response) => {
+          onNext({
+            content: response.items.sort(
+              (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+            ),
+            loadMore: undefined, // TODO
+          });
+        }, onError);
+    },
+  }),
 });

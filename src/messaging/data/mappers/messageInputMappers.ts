@@ -13,7 +13,7 @@ import {
 } from "./../../domain/entities";
 import { MessageFileUploader } from "./../MessageFileUploader";
 
-export const mapMessageInputToSendMessageInput = async (
+export const mapToSendMessageInput = async (
   fileUploader: MessageFileUploader,
   input:
     | TextMessageInput
@@ -24,11 +24,11 @@ export const mapMessageInputToSendMessageInput = async (
   replyToMessageId?: GqlUuid,
 ): Promise<SendMessageInput> => ({
   clientId: UUID.genV4().toString(),
-  content: await mapMessageInputToSendMessageContentInput(input, fileUploader),
+  content: await mapToSendMessageContentInput(input, fileUploader),
   replyToMessageId,
 });
 
-const mapMessageInputToSendMessageContentInput = async (
+const mapToSendMessageContentInput = async (
   input:
     | TextMessageInput
     | ImageMessageInput
@@ -37,21 +37,21 @@ const mapMessageInputToSendMessageContentInput = async (
     | AudioMessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => {
-  if ("text" in input) return mapTextInputToSendMessageInput(input);
+  if ("text" in input) return mapToTextSendMessageContentInput(input);
 
   switch (input.kind) {
     case "image":
-      return mapImageInputToSendMessageInput(input, fileUploader);
+      return mapToImageSendMessageContentInput(input, fileUploader);
     case "video":
-      return mapVideoInputToSendMessageInput(input, fileUploader);
+      return mapToVideoSendMessageContentInput(input, fileUploader);
     case "document":
-      return mapDocumentInputToSendMessageInput(input, fileUploader);
+      return mapToDocumentSendMessageContentInput(input, fileUploader);
     case "audio":
-      return mapAudioInputToSendMessageInput(input, fileUploader);
+      return mapToAudioSendMessageContentInput(input, fileUploader);
   }
 };
 
-const mapTextInputToSendMessageInput = (
+const mapToTextSendMessageContentInput = (
   input: TextMessageInput,
 ): SendMessageContentInput => ({
   textInput: {
@@ -59,7 +59,7 @@ const mapTextInputToSendMessageInput = (
   },
 });
 
-const mapImageInputToSendMessageInput = async (
+const mapToImageSendMessageContentInput = async (
   input: ImageMessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => ({
@@ -70,7 +70,7 @@ const mapImageInputToSendMessageInput = async (
   },
 });
 
-const mapVideoInputToSendMessageInput = async (
+const mapToVideoSendMessageContentInput = async (
   input: VideoMessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => ({
@@ -81,7 +81,7 @@ const mapVideoInputToSendMessageInput = async (
   },
 });
 
-const mapDocumentInputToSendMessageInput = async (
+const mapToDocumentSendMessageContentInput = async (
   input: DocumentMessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => ({
@@ -92,7 +92,7 @@ const mapDocumentInputToSendMessageInput = async (
   },
 });
 
-const mapAudioInputToSendMessageInput = async (
+const mapToAudioSendMessageContentInput = async (
   input: AudioMessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => ({

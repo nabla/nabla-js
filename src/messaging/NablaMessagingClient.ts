@@ -57,9 +57,11 @@ export class NablaMessagingClient {
   };
 
   watchConversationItems = (
-    _id: UUID,
+    id: UUID,
   ): Watcher<PaginatedContent<ConversationItem[]>> => {
     this.messagingContainer.sessionRepository.authenticatableOrThrow();
-    throw new Error("NotImplemented");
+    return this.messagingContainer.conversationRepository.watchConversationItems(
+      id,
+    );
   };
 }

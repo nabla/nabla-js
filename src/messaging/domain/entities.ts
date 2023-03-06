@@ -77,7 +77,7 @@ export type Message =
   | DeletedMessage
   | VideoCallRoom;
 
-type BaseMessage = BaseConversationItem & {
+export type BaseMessage = BaseConversationItem & {
   id: UUID;
   sentAt: Date;
   author: MessageAuthor;

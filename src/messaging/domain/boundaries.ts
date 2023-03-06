@@ -4,6 +4,7 @@ import { PaginatedContent, Watcher } from "./../../domain/response";
 import {
   AudioMessageInput,
   Conversation,
+  ConversationItem,
   DocumentMessageInput,
   ImageMessageInput,
   TextMessageInput,
@@ -25,4 +26,8 @@ export type ConversationRepository = {
   watchConversations(): Watcher<PaginatedContent<Conversation[]>>;
 
   watchConversation(id: UUID): Watcher<Conversation>;
+
+  watchConversationItems(
+    id: UUID,
+  ): Watcher<PaginatedContent<ConversationItem[]>>;
 };

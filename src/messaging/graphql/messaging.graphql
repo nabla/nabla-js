@@ -218,21 +218,25 @@ fragment LivekitRoomMessageContentFragment on LivekitRoomMessageContent {
   }
 }
 
+fragment MessageAuthorFragment on MessageAuthor {
+  ... on Provider {
+    ...ProviderFragment
+  }
+  ... on Patient {
+    ...PatientFragment
+  }
+  ... on System {
+    ...SystemFragment
+  }
+  ... on DeletedProvider {
+    empty: _
+  }
+}
+
 fragment MessageSummaryFragment on Message {
   id
   author {
-    ... on Provider {
-      ...ProviderFragment
-    }
-    ... on Patient {
-      ...PatientFragment
-    }
-    ... on System {
-      ...SystemFragment
-    }
-    ... on DeletedProvider {
-      empty: _
-    }
+    ...MessageAuthorFragment
   }
   messageContent: content {
     ...MessageContentFragment
