@@ -4,11 +4,11 @@ import {
   MessageAuthorFragmentFragment,
   MessageFragmentFragment,
 } from "./../../__generated__/graphql";
+import { removeUndefined } from "./../../../helpers/arrayHelpers";
 import {
   mapGqlProvider,
   mapGqlUuidToUUID,
   mapISOStringToDate,
-  removeUndefined,
 } from "./../../data/mappers/common";
 import {
   BaseMessage,
@@ -65,6 +65,7 @@ const mapToConversationActivity = (
       ),
       kind: "providerJoinConversation",
     },
+    kind: "conversationActivity",
   };
 };
 
@@ -93,12 +94,12 @@ const mapToMessage = (
       return {
         ...mapToBaseMessage(fragment),
         text: fragment.messageContent.text,
-        kind: "text",
+        kind: "textMessage",
       };
     case "DeletedMessageContent":
       return {
         ...mapToBaseMessage(fragment),
-        kind: "deleted",
+        kind: "deletedMessage",
       };
     case "ImageMessageContent":
       return {
@@ -107,7 +108,7 @@ const mapToMessage = (
         mimetype: fragment.messageContent.imageFileUpload.mimeType,
         fileName: fragment.messageContent.imageFileUpload.fileName,
         size: mapToSize(fragment.messageContent.imageFileUpload),
-        kind: "image",
+        kind: "imageMessage",
       };
     case "VideoMessageContent":
       return {
@@ -116,7 +117,7 @@ const mapToMessage = (
         mimetype: fragment.messageContent.videoFileUpload.mimeType,
         fileName: fragment.messageContent.videoFileUpload.fileName,
         size: mapToSize(fragment.messageContent.videoFileUpload),
-        kind: "video",
+        kind: "videoMessage",
       };
     case "DocumentMessageContent":
       return {
@@ -134,7 +135,7 @@ const mapToMessage = (
                 fragment.messageContent.documentFileUpload.thumbnail.mimeType,
             }
           : undefined,
-        kind: "document",
+        kind: "documentMessage",
       };
     case "AudioMessageContent":
       return {
@@ -144,7 +145,7 @@ const mapToMessage = (
         fileName: fragment.messageContent.audioFileUpload.fileName,
         durationMs:
           fragment.messageContent.audioFileUpload.durationMs ?? undefined,
-        kind: "audio",
+        kind: "audioMessage",
       };
     case "LivekitRoomMessageContent":
       return {

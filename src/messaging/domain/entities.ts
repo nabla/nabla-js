@@ -86,11 +86,11 @@ export type BaseMessage = BaseConversationItem & {
 
 export type TextMessage = BaseMessage & {
   text: string;
-  kind: "text";
+  kind: "textMessage";
 };
 
 export type DeletedMessage = BaseMessage & {
-  kind: "deleted";
+  kind: "deletedMessage";
 };
 
 export type MediaMessage = BaseMessage & {
@@ -101,13 +101,13 @@ export type MediaMessage = BaseMessage & {
 
 export type ImageMessage = MediaMessage & {
   size?: Size;
-  kind: "image";
+  kind: "imageMessage";
 };
 
 export type VideoMessage = MediaMessage & {
   size?: Size;
   durationMs?: number;
-  kind: "video";
+  kind: "videoMessage";
 };
 
 export type DocumentMessage = MediaMessage & {
@@ -116,18 +116,19 @@ export type DocumentMessage = MediaMessage & {
     url: string;
     mimetype: string;
   };
-  kind: "document";
+  kind: "documentMessage";
 };
 
 export type AudioMessage = MediaMessage & {
   durationMs?: number;
-  kind: "audio";
+  kind: "audioMessage";
 };
 
 export type ConversationActivity = BaseConversationItem & {
   id: UUID;
   activityTime: Date;
   content: ProviderJoinedConversationActivityContent;
+  kind: "conversationActivity";
 };
 
 export type ProviderJoinedConversationActivityContent = {

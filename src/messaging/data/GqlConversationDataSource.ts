@@ -8,14 +8,10 @@ import { UUID } from "uuidjs";
 import {
   ConversationDocument,
   ConversationEventsDocument,
-  ConversationItemsDocument,
   ConversationQuery,
-  ConversationsDocument,
-  ConversationsEventsDocument,
   CreateConversationDocument,
   SendMessageInput,
 } from "./../__generated__/graphql";
-import { subscriptionHolder } from "./../../data/subscriptionHolder";
 import { Logger } from "./../../domain/boundaries";
 import { InternalError, ServerError } from "./../../domain/errors";
 import { Subscription, Watcher } from "./../../domain/response";
@@ -24,6 +20,16 @@ import {
   ConversationItem,
   PaginatedList,
 } from "./../domain/entities";
+import {
+  getDefaultConversationItemQueryOptions,
+  insertConversationItemsInCache,
+  newConversationItemsSubscriptionHolders,
+} from "./cache/conversationItemsCache";
+import {
+  defaultConversationsQueryOptions,
+  insertConversationsInCache,
+  newConversationsSubscriptionHolder,
+} from "./cache/conversationsCache";
 import { mapToConversationItem } from "./mappers/conversationItemMappers";
 import {
   findOldestTypingProviderTimestamp,
@@ -47,59 +53,20 @@ export type GqlConversationDataSource = {
   watchConversationItems: (
     id: UUID,
   ) => Watcher<PaginatedList<ConversationItem>>;
+
+  loadMoreItemsInConversationCache: (id: UUID) => Promise<void>;
 };
 
 export const gqlConversationDataSourceImpl = (
   apolloClient: ApolloClient<NormalizedCacheObject>,
   logger: Logger,
 ): GqlConversationDataSource => {
-  const defaultConversationsPageSize = 25;
-  const defaultConversationsQueryOptions = {
-    query: ConversationsDocument,
-    variables: {
-      pageInfo: {
-        numberOfItems: defaultConversationsPageSize,
-      },
-    },
-  };
-  const conversationsSubscriptionHolder = subscriptionHolder(
+  const conversationsSubscriptionHolder = newConversationsSubscriptionHolder(
     apolloClient,
-    ConversationsEventsDocument,
     logger,
-    (data) => {
-      if (data.conversations?.event.__typename === "ConversationCreatedEvent") {
-        const conversationFragment = data.conversations.event.conversation;
-
-        apolloClient.cache.updateQuery(
-          defaultConversationsQueryOptions,
-          (cacheData) => {
-            if (!cacheData) return;
-
-            return {
-              ...cacheData,
-              conversations: {
-                ...cacheData.conversations,
-                conversations:
-                  cacheData.conversations.conversations.concat(
-                    conversationFragment,
-                  ),
-              },
-            };
-          },
-        );
-      }
-    },
   );
-  const defaultConversationItemsPageSize = 20;
-  const getDefaultConversationItemQueryOptions = (id: UUID) => ({
-    query: ConversationItemsDocument,
-    variables: {
-      id: id.toString(),
-      pageInfo: {
-        numberOfItems: defaultConversationItemsPageSize,
-      },
-    },
-  });
+  const conversationItemsSubscriptionHolders =
+    newConversationItemsSubscriptionHolders(apolloClient, logger);
 
   const subscribeToConversationEvents = (id: UUID): Subscription =>
     apolloClient
@@ -174,40 +141,22 @@ export const gqlConversationDataSourceImpl = (
       }
 
       const newDataResponse = await apolloClient.query({
-        query: ConversationsDocument,
+        ...defaultConversationsQueryOptions,
         variables: {
+          ...defaultConversationsQueryOptions.variables,
           pageInfo: {
-            numberOfItems: defaultConversationsPageSize,
+            ...defaultConversationsQueryOptions.variables.pageInfo,
             cursor: nextCursor,
           },
         },
         fetchPolicy: "network-only",
       });
 
-      apolloClient.cache.updateQuery(
-        defaultConversationsQueryOptions,
-        (data) => {
-          if (!data) return;
-
-          const oldConversations = data.conversations.conversations;
-          const oldConversationsIds = oldConversations.map(
-            (conversation) => conversation.id,
-          );
-          const newConversations =
-            newDataResponse.data.conversations.conversations.filter(
-              (conversation) => !oldConversationsIds.includes(conversation.id),
-            );
-
-          return {
-            ...data,
-            conversations: {
-              ...data.conversations,
-              hasMore: newDataResponse.data.conversations.hasMore,
-              nextCursor: newDataResponse.data.conversations.nextCursor,
-              conversations: oldConversations.concat(newConversations),
-            },
-          };
-        },
+      insertConversationsInCache(
+        apolloClient,
+        newDataResponse.data.conversations.conversations,
+        newDataResponse.data.conversations.hasMore,
+        newDataResponse.data.conversations.nextCursor,
       );
     },
 
@@ -288,14 +237,49 @@ export const gqlConversationDataSourceImpl = (
             });
           }, onError);
 
-        // TODO subscription
+        const eventsSubscription = conversationItemsSubscriptionHolders
+          .get(id)
+          .subscribe();
 
         return {
           unsubscribe() {
             apolloWatcherSubscription.unsubscribe();
+            eventsSubscription.unsubscribe();
           },
         };
       },
     }),
+
+    loadMoreItemsInConversationCache: async (id: UUID): Promise<void> => {
+      const query = getDefaultConversationItemQueryOptions(id);
+      const nextCursor =
+        apolloClient.cache.readQuery(query)?.conversation.conversation.items
+          .nextCursor;
+      if (!nextCursor) {
+        throw new InternalError(
+          `Tried to load more while no cache or no more pages for conversation: (${id.toString()})`,
+        );
+      }
+
+      const newDataResponse = await apolloClient.query({
+        ...query,
+        variables: {
+          ...query.variables,
+          pageInfo: {
+            ...query.variables.pageInfo,
+            cursor: nextCursor,
+          },
+        },
+        fetchPolicy: "network-only",
+      });
+
+      insertConversationItemsInCache(
+        id,
+        apolloClient,
+        newDataResponse.data.conversation.conversation.items.data,
+        newDataResponse.data.conversation.conversation.items.hasMore,
+        newDataResponse.data.conversation.conversation.items.nextCursor,
+      );
+    },
   };
 };

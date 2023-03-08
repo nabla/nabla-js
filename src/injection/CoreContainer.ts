@@ -124,6 +124,35 @@ export class CoreContainer {
       cache: new InMemoryCache({
         dataIdFromObject: (obj: { __typename?: string; id?: string }) =>
           obj.id && obj.__typename ? `${obj.__typename}:${obj.id}` : undefined,
+        possibleTypes: {
+          MessageAuthor: ["Provider", "Patient", "System", "DeletedProvider"],
+          MessageContent: [
+            "TextMessageContent",
+            "ImageMessageContent",
+            "VideoMessageContent",
+            "DocumentMessageContent",
+            "AudioMessageContent",
+            "LivekitRoomMessageContent",
+            "DeletedMessageContent",
+          ],
+          MaybeProvider: ["Provider", "DeletedProvider"],
+          ConversationActivityContent: [
+            "ProviderJoinedConversation",
+            "ConversationClosed",
+            "ConversationReopened",
+          ],
+          ConversationsEvent: [
+            "ConversationCreatedEvent",
+            "ConversationUpdatedEvent",
+            "ConversationDeletedEvent",
+          ],
+          ConversationEvent: [
+            "MessageCreatedEvent",
+            "MessageUpdatedEvent",
+            "TypingEvent",
+            "ConversationActivityCreated",
+          ],
+        },
       }),
     });
 

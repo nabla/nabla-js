@@ -84,7 +84,10 @@ export const conversationRepositoryImpl = (
             content: response.items.sort(
               (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
             ),
-            loadMore: undefined, // TODO
+            loadMore: response.hasMore
+              ? () =>
+                  gqlConversationDataSource.loadMoreItemsInConversationCache(id)
+              : undefined,
           });
         }, onError);
     },

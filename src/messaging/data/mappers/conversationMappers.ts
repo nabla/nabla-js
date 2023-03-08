@@ -2,13 +2,9 @@ import {
   ConversationFragmentFragment,
   ProviderInConversationFragmentFragment,
 } from "./../../__generated__/graphql";
+import { removeUndefined } from "./../../../helpers/arrayHelpers";
 import { Conversation, ProviderInConversation } from "./../../domain/entities";
-import {
-  mapGqlProvider,
-  mapGqlUuidToUUID,
-  mapISOStringToDate,
-  removeUndefined,
-} from "./common";
+import { mapGqlProvider, mapGqlUuidToUUID, mapISOStringToDate } from "./common";
 
 export const typingTimeWindowMs = 20_000;
 

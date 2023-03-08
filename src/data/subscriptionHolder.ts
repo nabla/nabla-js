@@ -1,15 +1,23 @@
 import { ApolloClient, NormalizedCacheObject } from "@apollo/client/core";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { OperationVariables } from "@apollo/client/core/types";
+import { SubscriptionOptions } from "@apollo/client/core/watchQueryOptions";
 
 import { Logger } from "./../domain/boundaries";
 import { Subscription } from "./../domain/response";
 
-export const subscriptionHolder = <T>(
+export type SubscriptionHolder = {
+  subscribe: () => Subscription;
+};
+
+export const subscriptionHolder = <
+  T = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
   apolloClient: ApolloClient<NormalizedCacheObject>,
-  subscriptionQuery: TypedDocumentNode<T, any>,
+  subscriptionOptions: SubscriptionOptions<TVariables, T>,
   logger: Logger,
   sideEffects?: (data: T) => void,
-) => {
+): SubscriptionHolder => {
   let currentSubscription: Subscription | undefined;
   let subscribersCount = 0;
 
@@ -21,7 +29,7 @@ export const subscriptionHolder = <T>(
 
       currentSubscription = apolloClient
         .subscribe({
-          query: subscriptionQuery,
+          ...subscriptionOptions,
           errorPolicy: "ignore",
         })
         .subscribe(

@@ -25,6 +25,3 @@ export const mapGqlUuidToUUID = (gqlUuid: GqlUuid): UUID => {
 
   return uuid;
 };
-
-export const removeUndefined = <S>(value: S | undefined): value is S =>
-  value !== undefined;
