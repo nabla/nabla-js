@@ -7,6 +7,7 @@ import {
   ConversationItem,
   DocumentMessageInput,
   ImageMessageInput,
+  MessageInput,
   TextMessageInput,
   VideoMessageInput,
 } from "./entities";
@@ -30,4 +31,10 @@ export type ConversationRepository = {
   watchConversationItems(
     id: UUID,
   ): Watcher<PaginatedContent<ConversationItem[]>>;
+
+  sendMessage(
+    input: MessageInput,
+    conversationId: UUID,
+    replyTo?: UUID,
+  ): Promise<UUID>;
 };

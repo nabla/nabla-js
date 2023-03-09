@@ -8,6 +8,7 @@ import {
   AudioMessageInput,
   DocumentMessageInput,
   ImageMessageInput,
+  MessageInput,
   TextMessageInput,
   VideoMessageInput,
 } from "./../../domain/entities";
@@ -15,12 +16,7 @@ import { MessageFileUploader } from "./../MessageFileUploader";
 
 export const mapToSendMessageInput = async (
   fileUploader: MessageFileUploader,
-  input:
-    | TextMessageInput
-    | ImageMessageInput
-    | VideoMessageInput
-    | DocumentMessageInput
-    | AudioMessageInput,
+  input: MessageInput,
   replyToMessageId?: GqlUuid,
 ): Promise<SendMessageInput> => ({
   clientId: UUID.genV4().toString(),
@@ -28,13 +24,8 @@ export const mapToSendMessageInput = async (
   replyToMessageId,
 });
 
-const mapToSendMessageContentInput = async (
-  input:
-    | TextMessageInput
-    | ImageMessageInput
-    | VideoMessageInput
-    | DocumentMessageInput
-    | AudioMessageInput,
+export const mapToSendMessageContentInput = async (
+  input: MessageInput,
   fileUploader: MessageFileUploader,
 ): Promise<SendMessageContentInput> => {
   if ("text" in input) return mapToTextSendMessageContentInput(input);

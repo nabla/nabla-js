@@ -3,13 +3,9 @@ import { UUID } from "uuidjs";
 import { PaginatedContent, Watcher } from "./../domain/response";
 import { NablaClient } from "./../NablaClient";
 import {
-  AudioMessageInput,
   Conversation,
   ConversationItem,
-  DocumentMessageInput,
-  ImageMessageInput,
-  TextMessageInput,
-  VideoMessageInput,
+  MessageInput,
 } from "./domain/entities";
 import { MessagingContainer } from "./injection/MessagingContainer";
 
@@ -29,12 +25,7 @@ export class NablaMessagingClient {
   }
 
   createConversationWithMessage = async (
-    messageInput:
-      | TextMessageInput
-      | ImageMessageInput
-      | VideoMessageInput
-      | DocumentMessageInput
-      | AudioMessageInput,
+    messageInput: MessageInput,
     title?: string,
     providerIds?: UUID[],
   ): Promise<Conversation> => {
@@ -62,6 +53,19 @@ export class NablaMessagingClient {
     this.messagingContainer.sessionRepository.authenticatableOrThrow();
     return this.messagingContainer.conversationRepository.watchConversationItems(
       id,
+    );
+  };
+
+  sendMessage = (
+    input: MessageInput,
+    conversationId: UUID,
+    replyTo?: UUID,
+  ): Promise<UUID> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.sendMessage(
+      input,
+      conversationId,
+      replyTo,
     );
   };
 }

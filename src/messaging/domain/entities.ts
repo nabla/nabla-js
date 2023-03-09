@@ -1,5 +1,12 @@
 import { UUID } from "uuidjs";
 
+export type MessageInput =
+  | TextMessageInput
+  | ImageMessageInput
+  | VideoMessageInput
+  | DocumentMessageInput
+  | AudioMessageInput;
+
 export type TextMessageInput = {
   text: string;
 };

@@ -16,9 +16,6 @@ export const messageFileUploaderImpl =
 
     const response = await httpClient.call({
       path: "v1/patient/upload",
-      headers: {
-        "Content-Type": `multipart/form-data; ${formData.getBoundary()}`,
-      },
       data: formData,
     });
 

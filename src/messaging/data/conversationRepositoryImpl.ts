@@ -7,16 +7,15 @@ import {
 } from "./../../domain/response";
 import { ConversationRepository } from "./../domain/boundaries";
 import {
-  AudioMessageInput,
   Conversation,
   ConversationItem,
-  DocumentMessageInput,
-  ImageMessageInput,
-  TextMessageInput,
-  VideoMessageInput,
+  MessageInput,
 } from "./../domain/entities";
 import { GqlConversationDataSource } from "./GqlConversationDataSource";
-import { mapToSendMessageInput } from "./mappers/messageInputMappers";
+import {
+  mapToSendMessageContentInput,
+  mapToSendMessageInput,
+} from "./mappers/messageInputMappers";
 import { MessageFileUploader } from "./MessageFileUploader";
 
 export const conversationRepositoryImpl = (
@@ -24,12 +23,7 @@ export const conversationRepositoryImpl = (
   messageFileUploader: MessageFileUploader,
 ): ConversationRepository => ({
   createConversation: async (
-    messageInput?:
-      | TextMessageInput
-      | ImageMessageInput
-      | VideoMessageInput
-      | DocumentMessageInput
-      | AudioMessageInput,
+    messageInput?: MessageInput,
     title?: string,
     providerIds?: UUID[],
   ): Promise<Conversation> => {
@@ -92,4 +86,20 @@ export const conversationRepositoryImpl = (
         }, onError);
     },
   }),
+
+  sendMessage: async (
+    input: MessageInput,
+    conversationId: UUID,
+    replyTo?: UUID,
+  ): Promise<UUID> => {
+    const gqlMessageInput = await mapToSendMessageContentInput(
+      input,
+      messageFileUploader,
+    );
+    return gqlConversationDataSource.sendMessage(
+      gqlMessageInput,
+      conversationId,
+      replyTo,
+    );
+  },
 });

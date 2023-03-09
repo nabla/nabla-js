@@ -10,6 +10,8 @@ import {
   ConversationEventsDocument,
   ConversationQuery,
   CreateConversationDocument,
+  SendMessageContentInput,
+  SendMessageDocument,
   SendMessageInput,
 } from "./../__generated__/graphql";
 import { Logger } from "./../../domain/boundaries";
@@ -30,6 +32,7 @@ import {
   insertConversationsInCache,
   newConversationsSubscriptionHolder,
 } from "./cache/conversationsCache";
+import { mapGqlUuidToUUID } from "./mappers/common";
 import { mapToConversationItem } from "./mappers/conversationItemMappers";
 import {
   findOldestTypingProviderTimestamp,
@@ -55,6 +58,12 @@ export type GqlConversationDataSource = {
   ) => Watcher<PaginatedList<ConversationItem>>;
 
   loadMoreItemsInConversationCache: (id: UUID) => Promise<void>;
+
+  sendMessage: (
+    input: SendMessageContentInput,
+    conversationId: UUID,
+    replyTo?: UUID,
+  ) => Promise<UUID>;
 };
 
 export const gqlConversationDataSourceImpl = (
@@ -280,6 +289,33 @@ export const gqlConversationDataSourceImpl = (
         newDataResponse.data.conversation.conversation.items.hasMore,
         newDataResponse.data.conversation.conversation.items.nextCursor,
       );
+    },
+
+    sendMessage: async (
+      input: SendMessageContentInput,
+      conversationId: UUID,
+      replyTo?: UUID,
+    ): Promise<UUID> => {
+      const mutation = await apolloClient.mutate({
+        mutation: SendMessageDocument,
+        variables: {
+          conversationId: conversationId.toString(),
+          input: {
+            replyToMessageId: replyTo?.toString(),
+            clientId: UUID.genV4().toString(),
+            content: input,
+          },
+        },
+      });
+
+      const id = mutation.data?.sendMessageV2.message.id;
+      if (!id) {
+        throw new ServerError(
+          "Missing message id for createConversation mutation",
+        );
+      }
+
+      return mapGqlUuidToUUID(id);
     },
   };
 };
