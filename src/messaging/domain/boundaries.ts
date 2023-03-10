@@ -37,4 +37,6 @@ export type ConversationRepository = {
     conversationId: UUID,
     replyTo?: UUID,
   ): Promise<UUID>;
+
+  deleteMessage(messageId: UUID): Promise<void>;
 };

@@ -102,4 +102,7 @@ export const conversationRepositoryImpl = (
       replyTo,
     );
   },
+
+  deleteMessage: (messageId: UUID): Promise<void> =>
+    gqlConversationDataSource.deleteMessage(messageId),
 });

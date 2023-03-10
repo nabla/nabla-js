@@ -10,6 +10,7 @@ import {
   ConversationEventsDocument,
   ConversationQuery,
   CreateConversationDocument,
+  DeleteMessageDocument,
   SendMessageContentInput,
   SendMessageDocument,
   SendMessageInput,
@@ -64,6 +65,8 @@ export type GqlConversationDataSource = {
     conversationId: UUID,
     replyTo?: UUID,
   ) => Promise<UUID>;
+
+  deleteMessage: (messageId: UUID) => Promise<void>;
 };
 
 export const gqlConversationDataSourceImpl = (
@@ -316,6 +319,20 @@ export const gqlConversationDataSourceImpl = (
       }
 
       return mapGqlUuidToUUID(id);
+    },
+
+    deleteMessage: async (messageId: UUID): Promise<void> => {
+      const mutation = await apolloClient.mutate({
+        mutation: DeleteMessageDocument,
+        variables: {
+          messageId: messageId.toString(),
+        },
+      });
+
+      const id = mutation.data?.deleteMessage.message.id;
+      if (!id) {
+        throw new ServerError("Missing message id for delete message mutation");
+      }
     },
   };
 };

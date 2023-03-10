@@ -68,4 +68,11 @@ export class NablaMessagingClient {
       replyTo,
     );
   };
+
+  deleteMessage = (messageId: UUID): Promise<void> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.deleteMessage(
+      messageId,
+    );
+  };
 }
