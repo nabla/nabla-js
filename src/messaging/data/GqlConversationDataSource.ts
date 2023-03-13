@@ -11,9 +11,11 @@ import {
   ConversationQuery,
   CreateConversationDocument,
   DeleteMessageDocument,
+  MaskAsSeenDocument,
   SendMessageContentInput,
   SendMessageDocument,
   SendMessageInput,
+  SetTypingDocument,
 } from "./../__generated__/graphql";
 import { Logger } from "./../../domain/boundaries";
 import { InternalError, ServerError } from "./../../domain/errors";
@@ -67,6 +69,10 @@ export type GqlConversationDataSource = {
   ) => Promise<UUID>;
 
   deleteMessage: (messageId: UUID) => Promise<void>;
+
+  markConversationAsRead: (conversationId: UUID) => Promise<void>;
+
+  setTyping: (conversationId: UUID, isTyping: boolean) => Promise<void>;
 };
 
 export const gqlConversationDataSourceImpl = (
@@ -332,6 +338,40 @@ export const gqlConversationDataSourceImpl = (
       const id = mutation.data?.deleteMessage.message.id;
       if (!id) {
         throw new ServerError("Missing message id for delete message mutation");
+      }
+    },
+
+    markConversationAsRead: async (conversationId: UUID): Promise<void> => {
+      const mutation = await apolloClient.mutate({
+        mutation: MaskAsSeenDocument,
+        variables: {
+          conversationId: conversationId.toString(),
+        },
+      });
+
+      const id = mutation.data?.markAsSeen.conversation.id;
+      if (!id) {
+        throw new ServerError(
+          "Missing conversation id for mark conversation as seen mutation",
+        );
+      }
+    },
+
+    setTyping: async (
+      conversationId: UUID,
+      isTyping: boolean,
+    ): Promise<void> => {
+      const mutation = await apolloClient.mutate({
+        mutation: SetTypingDocument,
+        variables: {
+          conversationId: conversationId.toString(),
+          isTyping,
+        },
+      });
+
+      const result = mutation.data?.setTyping.__typename;
+      if (!result) {
+        throw new ServerError("Missing result for set typing mutation");
       }
     },
   };

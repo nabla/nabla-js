@@ -75,4 +75,19 @@ export class NablaMessagingClient {
       messageId,
     );
   };
+
+  markConversationAsRead = (conversationId: UUID): Promise<void> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.markConversationAsRead(
+      conversationId,
+    );
+  };
+
+  setTyping = (conversationId: UUID, isTyping: boolean): Promise<void> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.setTyping(
+      conversationId,
+      isTyping,
+    );
+  };
 }

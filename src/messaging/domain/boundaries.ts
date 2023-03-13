@@ -39,4 +39,8 @@ export type ConversationRepository = {
   ): Promise<UUID>;
 
   deleteMessage(messageId: UUID): Promise<void>;
+
+  markConversationAsRead(conversationId: UUID): Promise<void>;
+
+  setTyping(conversationId: UUID, isTyping: boolean): Promise<void>;
 };

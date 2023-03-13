@@ -105,4 +105,10 @@ export const conversationRepositoryImpl = (
 
   deleteMessage: (messageId: UUID): Promise<void> =>
     gqlConversationDataSource.deleteMessage(messageId),
+
+  markConversationAsRead: (conversationId: UUID): Promise<void> =>
+    gqlConversationDataSource.markConversationAsRead(conversationId),
+
+  setTyping: (conversationId: UUID, isTyping: boolean): Promise<void> =>
+    gqlConversationDataSource.setTyping(conversationId, isTyping),
 });
