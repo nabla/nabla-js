@@ -1,0 +1,637 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+scalar DateTime
+scalar UUID
+scalar TimeZone
+scalar BigDecimal
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Queries.
+
+type Query {
+  conversations(page: OpaqueCursorPage!): ConversationsOutput!
+
+  conversation(id: UUID!): ConversationOutput!
+
+  pastAppointments(page: OpaqueCursorPage!): AppointmentsPage!
+  upcomingAppointments(page: OpaqueCursorPage!): AppointmentsPage!
+  appointmentCategories: AppointmentCategoriesOutput!
+  appointmentCategory(id: UUID!): AppointmentCategoryOutput!
+  provider(id: UUID!): ProviderOutput!
+  appointmentConfirmationConsents: AppointmentConfirmationConsentsOutput!
+  appointmentAvailableLocations: AppointmentAvailableLocationsOutput!
+  appointment(id: UUID!): AppointmentOutput!
+}
+# ----------------------------------------------------------------------------------------------------------------------
+# Mutations.
+
+type Mutation {
+  createConversation(title: String, providerIds: [UUID!], initialMessage: SendMessageInput): CreateConversationOutput!
+
+  sendMessageV2(conversationId: UUID!, input: SendMessageInput!): SendMessageOutput!
+
+  sendMessage(
+    conversationId: UUID!
+    content: SendMessageContentInput!
+    clientId: UUID!
+    replyToMessageId: UUID
+  ): SendMessageOutput! @deprecated
+
+  deleteMessage(id: UUID!): DeleteMessageOutput!
+
+  markAsSeen(conversationId: UUID!): MarkConversationAsSeenOutput!
+
+  setTyping(conversationId: UUID!, isTyping: Boolean!): SetTypingOutput!
+
+  registerOrUpdateDevice(deviceId: UUID, device: DeviceInput!): UpdateDeviceOutput!
+
+  scheduleAppointment(
+    categoryId: UUID!
+    providerId: UUID!
+    slot: DateTime!
+    timeZone: TimeZone!
+  ): ScheduleAppointmentOutput! @deprecated(reason: "equivalent to scheduleAppointmentV2(isPhysical = false)")
+  scheduleAppointmentV2(
+    categoryId: UUID!
+    providerId: UUID!
+    isPhysical: Boolean!
+    slot: DateTime!
+    timeZone: TimeZone!
+  ): ScheduleAppointmentOutput! #@deprecated(reason: "only possible if appointment does not require payment.")
+  cancelAppointment(id: UUID!): CancelAppointmentOutput!
+  createPendingAppointment(
+    categoryId: UUID!
+    providerId: UUID!
+    isPhysical: Boolean!
+    startAt: DateTime!
+  ): ScheduleAppointmentOutput!
+  schedulePendingAppointment(appointmentId: UUID!): ScheduleAppointmentOutput!
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Subscriptions.
+
+type Subscription {
+  conversations: ConversationsEventOutput
+
+  conversation(id: UUID!): ConversationEventOutput
+
+  appointments: AppointmentsEventOutput
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Directives.
+
+# See FieldCodegenDirectives class.
+directive @codegenAsAsyncFun on FIELD_DEFINITION
+
+# See BackendEnumMapping class.
+directive @backendEnumClass(noMapping: Boolean, dbName: String, qualifiedName: String) on ENUM
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Other types.
+
+type Patient {
+  ### WARNING: do not add any sensitive data here, as it will be accessible between patients in group chats
+  ### If you want to add sensitive data, we should have a type MePatient instead
+  id: UUID!
+  displayName: String!
+  isMe: Boolean!
+}
+
+type EphemeralUrl {
+  url: String!
+  expiresAt: DateTime!
+}
+
+type System {
+  name: String!
+  avatar: ImageFileUpload
+}
+
+type Provider {
+  id: UUID!
+
+  prefix: String
+  firstName: String!
+  lastName: String!
+  title: String
+
+  avatarUrl: EphemeralUrl
+}
+
+type DeletedProvider {
+  _: EmptyObject!
+}
+
+union MaybeProvider = Provider | DeletedProvider
+
+union MessageAuthor = System | Patient | Provider | DeletedProvider
+
+type Message {
+  id: UUID!
+
+  author: MessageAuthor!
+  conversation: Conversation!
+  createdAt: DateTime!
+
+  content: MessageContent!
+
+  clientId: UUID
+  replyTo: Message
+}
+
+type ConversationActivity {
+  id: UUID!
+
+  conversation: Conversation!
+
+  createdAt: DateTime!
+  activityTime: DateTime!
+
+  content: ConversationActivityContent!
+}
+
+union ConversationActivityContent = ProviderJoinedConversation | ConversationClosed | ConversationReopened
+
+type Conversation {
+  id: UUID!
+
+  title: String
+  description: String
+  subtitle: String @codegenAsAsyncFun
+  createdAt: DateTime!
+  updatedAt: DateTime! @codegenAsAsyncFun
+  pictureUrl: EphemeralUrl
+  isLocked: Boolean!
+
+  inboxPreviewTitle: String! @codegenAsAsyncFun
+  lastMessagePreview: String @codegenAsAsyncFun
+  unreadMessageCount: Int! @codegenAsAsyncFun
+
+  providers: [ProviderInConversation!]!
+  items(page: OpaqueCursorPage!): ConversationItemsPage!
+}
+
+type ProviderInConversation {
+  id: UUID!
+
+  provider: Provider!
+
+  typingAt: DateTime
+  seenUntil: DateTime
+}
+
+union ConversationItem = Message | ConversationActivity
+
+type ConversationItemsPage {
+  data: [ConversationItem]!
+  hasMore: Boolean!
+  nextCursor: String
+}
+
+union MessageContent =
+    TextMessageContent
+  | ImageMessageContent
+  | VideoMessageContent
+  | DocumentMessageContent
+  | DeletedMessageContent
+  | AudioMessageContent
+  | LivekitRoomMessageContent
+
+type TextMessageContent {
+  text: String! @codegenAsAsyncFun
+}
+
+interface IFileUpload {
+  id: UUID!
+
+  url: EphemeralUrl!
+  fileName: String!
+  mimeType: String!
+}
+
+type ImageFileUpload implements IFileUpload {
+  id: UUID!
+
+  url: EphemeralUrl!
+  fileName: String!
+  mimeType: String!
+
+  width: Int
+  height: Int
+}
+
+type VideoFileUpload implements IFileUpload {
+  id: UUID!
+
+  url: EphemeralUrl!
+  fileName: String!
+  mimeType: String!
+
+  durationMs: Int
+  width: Int
+  height: Int
+}
+
+type DocumentFileUpload implements IFileUpload {
+  id: UUID!
+
+  url: EphemeralUrl!
+  fileName: String!
+  mimeType: String!
+
+  thumbnail: ImageFileUpload
+}
+
+type AudioFileUpload implements IFileUpload {
+  id: UUID!
+
+  url: EphemeralUrl!
+  fileName: String!
+  mimeType: String!
+
+  durationMs: Int
+}
+
+type ImageMessageContent {
+  imageFileUpload: ImageFileUpload!
+}
+
+type VideoMessageContent {
+  videoFileUpload: VideoFileUpload!
+}
+
+type DocumentMessageContent {
+  documentFileUpload: DocumentFileUpload!
+
+  title: String @codegenAsAsyncFun
+}
+
+type AudioMessageContent {
+  audioFileUpload: AudioFileUpload!
+}
+
+enum EmptyObject @backendEnumClass(noMapping: true) {
+  EMPTY
+}
+
+type DeletedMessageContent {
+  _: EmptyObject!
+}
+
+type LivekitRoomMessageContent {
+  livekitRoom: LivekitRoom!
+}
+
+input OpaqueCursorPage {
+  cursor: String
+  # Leave null to let the backend pick a default value.
+  # Max number you can ask is <some_big_but_not_too_big_number>.
+  numberOfItems: Int
+}
+
+type ConversationsOutput {
+  conversations: [Conversation!]!
+
+  nextCursor: String
+  hasMore: Boolean!
+}
+
+type ConversationOutput {
+  conversation: Conversation!
+}
+
+input SendMessageInput {
+  content: SendMessageContentInput!
+  clientId: UUID!
+  replyToMessageId: UUID
+}
+
+# This is a oneOf input, i.e. there is _exactly one_ non null attribute.
+input SendMessageContentInput {
+  textInput: SendTextMessageInput
+  imageInput: SendImageMessageInput
+  videoInput: SendVideoMessageInput
+  documentInput: SendDocumentMessageInput
+  audioInput: SendAudioMessageInput
+}
+
+input SendTextMessageInput {
+  text: String!
+}
+
+input UploadInput {
+  uuid: UUID!
+}
+
+input SendImageMessageInput {
+  upload: UploadInput!
+}
+
+input SendVideoMessageInput {
+  upload: UploadInput!
+}
+
+input SendDocumentMessageInput {
+  upload: UploadInput!
+}
+
+input SendAudioMessageInput {
+  upload: UploadInput!
+}
+
+type SendMessageOutput {
+  message: Message!
+}
+
+type DeleteMessageOutput {
+  message: Message!
+}
+
+type MarkConversationAsSeenOutput {
+  conversation: Conversation!
+}
+
+type SetTypingOutput {
+  conversation: Conversation!
+}
+
+type CreateConversationOutput {
+  conversation: Conversation!
+}
+
+type SubscriptionReadinessEvent {
+  isReady: Boolean!
+}
+
+union ConversationsEvent =
+    SubscriptionReadinessEvent
+  | ConversationCreatedEvent
+  | ConversationUpdatedEvent
+  | ConversationDeletedEvent
+
+type ConversationsEventOutput {
+  event: ConversationsEvent!
+}
+
+type ConversationCreatedEvent {
+  conversation: Conversation!
+}
+
+type ConversationUpdatedEvent {
+  conversation: Conversation!
+}
+
+type ConversationDeletedEvent {
+  conversationId: UUID!
+}
+
+union ConversationEvent =
+    SubscriptionReadinessEvent
+  | ConversationActivityCreated
+  | MessageCreatedEvent
+  | MessageUpdatedEvent
+  | TypingEvent
+
+type ConversationEventOutput {
+  event: ConversationEvent!
+}
+
+# --- Conversation Events
+
+type ConversationActivityCreated {
+  activity: ConversationActivity!
+}
+
+type MessageCreatedEvent {
+  message: Message!
+}
+
+type MessageUpdatedEvent {
+  message: Message!
+}
+
+type TypingEvent {
+  provider: ProviderInConversation!
+}
+
+# --- Appointment Events
+
+type AppointmentsEventOutput {
+  event: AppointmentsEvent!
+}
+
+union AppointmentsEvent =
+    SubscriptionReadinessEvent
+  | AppointmentCreatedEvent
+  | AppointmentUpdatedEvent
+  | AppointmentCancelledEvent
+
+type AppointmentCreatedEvent {
+  appointment: Appointment!
+}
+
+type AppointmentUpdatedEvent {
+  appointment: Appointment!
+}
+
+type AppointmentCancelledEvent {
+  appointmentId: UUID!
+}
+
+# --- Conversation Activity Contents
+
+type ProviderJoinedConversation {
+  provider: MaybeProvider!
+}
+
+type ConversationClosed {
+  _: EmptyObject!
+}
+
+type ConversationReopened {
+  _: EmptyObject!
+}
+
+# --- LiveKit rooms.
+
+type LivekitRoom {
+  uuid: UUID!
+  status: LivekitRoomStatus!
+}
+
+union LivekitRoomStatus = LivekitRoomOpenStatus | LivekitRoomClosedStatus
+
+type LivekitRoomOpenStatus {
+  url: String!
+  token: String!
+}
+
+type LivekitRoomClosedStatus {
+  _: EmptyObject!
+}
+
+input DeviceInput {
+  deviceModel: String!
+  os: DeviceOs!
+  osVersion: String!
+  codeVersion: Int!
+  sdkModules: [SdkModule!]!
+}
+
+type UpdateDeviceOutput {
+  deviceId: UUID!
+  sentry: Sentry
+}
+
+type Sentry {
+  dsn: String!
+  env: String!
+}
+
+enum DeviceOs {
+  ANDROID
+  IOS
+}
+
+enum SdkModule @backendEnumClass(dbName: "SdkModuleType") {
+  MESSAGING
+  VIDEO_CALL
+  VIDEO_CALL_SCHEDULING
+}
+
+type ProviderOutput {
+  provider: Provider!
+}
+
+# --- Appointment Scheduling
+
+type AppointmentCategoryOutput {
+  category: AppointmentCategory!
+}
+
+type AppointmentCategoriesOutput {
+  categories: [AppointmentCategory!]!
+}
+
+type ScheduleAppointmentOutput {
+  appointment: Appointment!
+}
+
+type CancelAppointmentOutput {
+  appointmentUuid: UUID!
+}
+
+type AppointmentsPage {
+  data: [Appointment!]!
+
+  hasMore: Boolean!
+  nextCursor: String
+}
+
+type Appointment {
+  id: UUID!
+  provider: Provider!
+  scheduledAt: DateTime!
+  state: AppointmentState!
+  location: AppointmentLocation!
+  price: Price
+}
+
+union AppointmentLocation = PhysicalAppointmentLocation | RemoteAppointmentLocation
+
+type PhysicalAppointmentLocation {
+  address: Address!
+}
+
+type RemoteAppointmentLocation {
+  livekitRoom: LivekitRoom
+  externalCallUrl: String
+}
+
+type Address {
+  id: UUID!
+  address: String!
+  zipCode: String!
+  city: String!
+  state: String
+  country: String
+  extraDetails: String
+}
+
+union AppointmentState = PendingAppointment | UpcomingAppointment | FinalizedAppointment
+
+type UpcomingAppointment {
+  livekitRoom: LivekitRoom
+}
+
+type FinalizedAppointment {
+  _: EmptyObject!
+}
+
+type PendingAppointment {
+  schedulingPaymentRequirement: AppointmentSchedulingRequiresPayment
+}
+
+type AppointmentSchedulingRequiresPayment {
+  price: Price!
+}
+
+type AppointmentCategory {
+  id: UUID!
+  name: String! @codegenAsAsyncFun
+  callDurationMinutes: Int! @codegenAsAsyncFun
+  availableSlots(page: OpaqueCursorPage!): AvailableSlotsPage!
+    @deprecated(reason: "equivalent to availableSlotsV2(isPhysical = false)")
+  availableSlotsV2(isPhysical: Boolean!, page: OpaqueCursorPage!): AvailableSlotsPage!
+}
+
+type AvailableSlotsPage {
+  slots: [AvailabilitySlot!]!
+
+  hasMore: Boolean!
+  nextCursor: String
+}
+
+type AvailabilitySlot {
+  startAt: DateTime!
+  endAt: DateTime!
+  provider: Provider!
+  location: AvailabilitySlotLocation! @deprecated(reason: "No longer used by SDKs.")
+}
+
+union AvailabilitySlotLocation = PhysicalAvailabilitySlotLocation | RemoteAvailabilitySlotLocation
+
+type PhysicalAvailabilitySlotLocation {
+  address: Address!
+}
+
+type RemoteAvailabilitySlotLocation {
+  _: EmptyObject!
+}
+
+type AppointmentConfirmationConsentsOutput {
+  firstConsentHtml: String!
+  secondConsentHtml: String!
+  physicalFirstConsentHtml: String!
+  physicalSecondConsentHtml: String!
+}
+
+type AppointmentAvailableLocationsOutput {
+  hasPhysicalAvailabilities: Boolean!
+  hasRemoteAvailabilities: Boolean!
+}
+
+type AppointmentOutput {
+  appointment: Appointment!
+}
+
+type Price {
+  amount: BigDecimal!
+  currencyCode: String!
+}

@@ -22,7 +22,7 @@
     "prettier": "prettier --cache --write --list-different --ignore-unknown $(git diff --name-only --relative)",
     "prettier-all": "yarn prettier-ci --write",
     "prettier-ci": "prettier --cache --ignore-path .gitignore --check '**/*.{ts,tsx,graphql,js,html,css,json,md,yml,xml,svg}'",
-    "qa": "tsc && yarn lint-ci && yarn prettier-ci && yarn test && yarn build"
+    "qa": "yarn codegen && yarn tsc && yarn lint-ci && yarn prettier-ci && yarn test && yarn build"
   },
   "prettier": {
     "trailingComma": "all"

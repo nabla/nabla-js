@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { generate } from "@graphql-codegen/cli";
 
 await generate({
-  schema: "./../../graphql/patient/patient-sdk.graphql",
+  schema: "./graphql/schema.graphqls",
   config: {
     scalars: {
       UUID: "GqlUuid",
