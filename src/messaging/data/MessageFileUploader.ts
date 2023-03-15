@@ -16,6 +16,7 @@ export const messageFileUploaderImpl =
 
     const response = await httpClient.call({
       path: "v1/patient/upload",
+      authenticated: true,
       data: formData,
     });
 

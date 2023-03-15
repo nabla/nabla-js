@@ -24,6 +24,7 @@ export type SessionRepository = {
 export type HttpClient = {
   call<Data>({
     path,
+    authenticated,
     headers,
     params,
     data,
@@ -32,6 +33,7 @@ export type HttpClient = {
 
 export type ApiCallOptions = {
   path: string;
+  authenticated: boolean;
   headers?: { [key: string]: string };
   params?: Record<string, string>;
   data?: any;

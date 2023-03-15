@@ -29,11 +29,26 @@ export class AxiosHttpClient implements HttpClient {
 
   call = async <Data>({
     path,
+    authenticated,
     headers,
     params,
     data,
   }: ApiCallOptions): Promise<APIResponse<Data>> => {
-    const accessToken = await this.sessionRepository.getFreshAccessToken();
+    let requestHeaders: { [key: string]: string } = {
+      "X-Nabla-API-Key": this.publicApiKey,
+      "Accept-Language": navigator.language,
+      ...this.additionalHeaders,
+      ...headers,
+    };
+
+    if (authenticated) {
+      const accessToken = await this.sessionRepository.getFreshAccessToken();
+      requestHeaders = {
+        ...requestHeaders,
+        "X-Nabla-Authorization": `Bearer ${accessToken}`,
+      };
+    }
+
     try {
       const response = (await axios.request<Data>({
         url: `${this.baseUrl}${path}`,
@@ -41,13 +56,7 @@ export class AxiosHttpClient implements HttpClient {
         method: data ? "POST" : "GET",
         data,
         params,
-        headers: {
-          "X-Nabla-Authorization": `Bearer ${accessToken}`,
-          "X-Nabla-API-Key": this.publicApiKey,
-          "Accept-Language": navigator.language,
-          ...this.additionalHeaders,
-          ...headers,
-        },
+        headers: requestHeaders,
       })) as APIResponse<Data>;
 
       response.requestId = response.headers["x-request-id"];

@@ -10,6 +10,7 @@ export class TokenRemoteDataSource {
 
     const newTokens = await httpClient.call<RefreshTokenResponseData>({
       path: "v1/patient/jwt/refresh",
+      authenticated: false,
       data: { refresh_token: refreshToken },
     });
 
