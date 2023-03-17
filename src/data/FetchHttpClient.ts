@@ -1,5 +1,3 @@
-import axios, { AxiosError } from "axios";
-
 import {
   ApiCallOptions,
   APIError,
@@ -8,7 +6,7 @@ import {
   SessionRepository,
 } from "./../domain/boundaries";
 
-export class AxiosHttpClient implements HttpClient {
+export class FetchHttpClient implements HttpClient {
   private readonly additionalHeaders: { [key: string]: string } = {};
 
   constructor(
@@ -27,19 +25,26 @@ export class AxiosHttpClient implements HttpClient {
     }
   }
 
-  call = async <Data>({
+  call = async ({
     path,
+    contentType,
     authenticated,
     headers,
-    params,
     data,
-  }: ApiCallOptions): Promise<APIResponse<Data>> => {
+  }: ApiCallOptions): Promise<APIResponse> => {
     let requestHeaders: { [key: string]: string } = {
       "X-Nabla-API-Key": this.publicApiKey,
       "Accept-Language": navigator.language,
       ...this.additionalHeaders,
       ...headers,
     };
+
+    if (contentType) {
+      requestHeaders = {
+        ...requestHeaders,
+        "Content-Type": contentType,
+      };
+    }
 
     if (authenticated) {
       const accessToken = await this.sessionRepository.getFreshAccessToken();
@@ -49,26 +54,21 @@ export class AxiosHttpClient implements HttpClient {
       };
     }
 
-    try {
-      const response = (await axios.request<Data>({
-        url: `${this.baseUrl}${path}`,
-        withCredentials: true,
-        method: data ? "POST" : "GET",
-        data,
-        params,
-        headers: requestHeaders,
-      })) as APIResponse<Data>;
+    const response = (await fetch(`${this.baseUrl}${path}`, {
+      method: data ? "POST" : "GET",
+      body: data,
+      headers: requestHeaders,
+    })) as APIResponse;
 
-      response.requestId = response.headers["x-request-id"];
-
-      return response;
-    } catch (e) {
-      if (e instanceof AxiosError && e.response) {
-        (e as APIError).requestId = e.response.headers["x-request-id"];
-        (e as APIError).is401 = e.response.status === 401;
-      }
-
-      throw e;
+    if (!response.ok) {
+      throw new APIError(
+        response.status,
+        await response.text(),
+        response.headers.get("x-request-id"),
+      );
     }
+
+    response.requestId = response.headers.get("x-request-id");
+    return response;
   };
 }

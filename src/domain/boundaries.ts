@@ -1,5 +1,3 @@
-import { AxiosError, AxiosResponse } from "axios";
-
 export type Logger = {
   info(message: string, error?: any): void;
   debug(message: string, error?: any): void;
@@ -22,29 +20,32 @@ export type SessionRepository = {
 };
 
 export type HttpClient = {
-  call<Data>({
+  call({
     path,
     authenticated,
     headers,
-    params,
     data,
-  }: ApiCallOptions): Promise<APIResponse<Data>>;
+  }: ApiCallOptions): Promise<APIResponse>;
 };
 
 export type ApiCallOptions = {
   path: string;
+  contentType?: string;
   authenticated: boolean;
   headers?: { [key: string]: string };
-  params?: Record<string, string>;
   data?: any;
 };
 
-export type APIResponse<Data> = AxiosResponse<Data> & {
+export type APIResponse = Response & {
   requestId: string | null;
 };
 
-export type APIError = AxiosError & {
-  requestId?: string | null;
-  is401?: boolean;
-  isCanceled?: boolean;
-};
+export class APIError extends Error {
+  constructor(
+    public code: number,
+    message: string,
+    public requestId?: string | null,
+  ) {
+    super(message);
+  }
+}

@@ -19,8 +19,8 @@ import {
 } from "./../data/apolloMiddlewares";
 import { SessionRepositoryImpl } from "./../data/auth/SessionRepositoryImpl";
 import { TokenLocalDataSource } from "./../data/auth/TokenLocalDataSource";
-import { AxiosHttpClient } from "./../data/AxiosHttpClient";
 import { consoleLogger } from "./../data/consoleLogger";
+import { FetchHttpClient } from "./../data/FetchHttpClient";
 import { inMemoryPatientRepository } from "./../data/patient/inMemoryPatientRepository";
 import { sessionLocalDataCleanerImpl } from "./../data/patient/sessionLocalDataCleanerImpl";
 import {
@@ -65,7 +65,7 @@ export class CoreContainer {
     );
     this.sessionRepository = sessionRepository;
 
-    this.httpClient = new AxiosHttpClient(
+    this.httpClient = new FetchHttpClient(
       networkConfiguration.baseUrl,
       configuration.publicApiKey,
       this.sessionRepository,

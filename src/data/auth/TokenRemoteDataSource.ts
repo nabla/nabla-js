@@ -8,20 +8,18 @@ export class TokenRemoteDataSource {
   refresh = async (refreshToken: string): Promise<AuthTokens> => {
     const httpClient = await this.httpClientPromise();
 
-    const newTokens = await httpClient.call<RefreshTokenResponseData>({
+    const response = await httpClient.call({
       path: "v1/patient/jwt/refresh",
+      contentType: "application/json",
       authenticated: false,
-      data: { refresh_token: refreshToken },
+      data: JSON.stringify({ refresh_token: refreshToken }),
     });
 
+    const responseJson = await response.json();
+
     return {
-      accessToken: newTokens.data.access_token,
-      refreshToken: newTokens.data.refresh_token,
+      accessToken: responseJson.access_token,
+      refreshToken: responseJson.refresh_token,
     };
   };
 }
-
-type RefreshTokenResponseData = {
-  refresh_token: string;
-  access_token: string;
-};

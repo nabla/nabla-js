@@ -9,10 +9,7 @@ export const messageFileUploaderImpl =
   async (file: MessageFile) => {
     const formData = new FormData();
     formData.append("purpose", "MESSAGE");
-    formData.append("file", file.file, {
-      filename: file.file.name,
-      contentType: file.mimetype,
-    });
+    formData.append("file", file.file, file.file.name);
 
     const response = await httpClient.call({
       path: "v1/patient/upload",
@@ -20,7 +17,7 @@ export const messageFileUploaderImpl =
       data: formData,
     });
 
-    return (response.data as string[])[0];
+    return ((await response.json()) as string[])[0];
   };
 
 export type MessageFile = {
