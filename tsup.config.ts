@@ -32,7 +32,7 @@ export default defineConfig({
 
     // Create a package.json file for the messaging sub module
     writeJsonFileSync("dist/messaging/package.json", {
-      name: "@nabla/sdk/messaging",
+      name: "@nabla/js/messaging",
       type: "module",
       main: "index.js",
       types: "index.d.ts",
