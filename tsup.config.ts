@@ -1,4 +1,4 @@
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { defineConfig } from "tsup";
 
 import packageJson from "./package.json";
@@ -37,6 +37,8 @@ export default defineConfig({
       main: "index.js",
       types: "index.d.ts",
     });
+
+    writeFileSync("dist/README.md", readFileSync("README.md", "utf-8"));
 
     return Promise.resolve();
   },
