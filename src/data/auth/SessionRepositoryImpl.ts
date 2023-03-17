@@ -74,7 +74,7 @@ export class SessionRepositoryImpl implements SessionRepository {
     const patientId = this.patientRepository.getPatientId();
     if (!patientId) throw new UserIdNotSetError();
 
-    const newAuthTokens = await this.sessionTokenProvider();
+    const newAuthTokens = await this.sessionTokenProvider(patientId);
     this.tokenLocalDataSource.setAuthTokens(newAuthTokens);
     return newAuthTokens;
   };

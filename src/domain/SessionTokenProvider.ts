@@ -3,4 +3,6 @@ export type AuthTokens = {
   accessToken: string;
 };
 
-export type SessionTokenProvider = () => Promise<AuthTokens> | AuthTokens;
+export type SessionTokenProvider = (
+  userId: string,
+) => Promise<AuthTokens> | AuthTokens;

@@ -1,15 +1,18 @@
 {
-  "name": "@nabla/sdk",
+  "name": "@nabla/js",
   "private": true,
-  "description": "TODO",
-  "version": "0.1.0",
+  "description": "The Nabla JS SDK makes it quick and easy to build an excellent healthcare communication experience in your web app.",
+  "version": "1.0.0-alpha01",
   "license": "MIT",
   "author": "Nabla",
   "type": "module",
   "main": "index.js",
-  "repository": "github:nabla/nabla-web",
+  "repository": "github:nabla/nabla-js",
   "keywords": [
-    "nabla"
+    "nabla",
+    "web",
+    "javascript",
+    "typescript"
   ],
   "scripts": {
     "start": "yarn codegen && tsup --watch",

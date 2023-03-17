@@ -24,6 +24,18 @@ export class NablaMessagingClient {
     );
   }
 
+  createConversation = async (
+    title?: string,
+    providerIds?: UUID[],
+  ): Promise<Conversation> => {
+    this.messagingContainer.sessionRepository.authenticatableOrThrow();
+    return this.messagingContainer.conversationRepository.createConversation(
+      undefined,
+      title,
+      providerIds,
+    );
+  };
+
   createConversationWithMessage = async (
     messageInput: MessageInput,
     title?: string,
