@@ -44,3 +44,9 @@ writeFileSync(
   readFileSync("./src/env.d.ts", "utf-8") +
     readFileSync("./src/__generated__/graphql.ts", "utf-8"),
 );
+
+writeFileSync(
+  "./src/__generated__/version.ts",
+  `export const sdkVersionCode: number = ${readFileSync("./version", "utf-8")}`,
+  "utf8",
+);

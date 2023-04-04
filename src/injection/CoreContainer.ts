@@ -12,6 +12,11 @@ import { createClient, GRAPHQL_TRANSPORT_WS_PROTOCOL } from "graphql-ws";
 
 import { TokenRemoteDataSource } from "../data/auth/TokenRemoteDataSource";
 import {
+  DeviceIdDataSource,
+  deviceIdDataSourceImpl,
+} from "../data/device/DeviceIdDataSource";
+import { deviceRepositoryImpl } from "../data/device/DeviceRepositoryImpl";
+import {
   acceptLanguageMiddleware,
   authMiddleware,
   publicApiKeyMiddleware,
@@ -24,6 +29,7 @@ import { FetchHttpClient } from "./../data/FetchHttpClient";
 import { inMemoryPatientRepository } from "./../data/patient/inMemoryPatientRepository";
 import { sessionLocalDataCleanerImpl } from "./../data/patient/sessionLocalDataCleanerImpl";
 import {
+  DeviceRepository,
   HttpClient,
   Logger,
   PatientRepository,
@@ -37,6 +43,7 @@ export class CoreContainer {
   logger: Logger;
   apolloClient: ApolloClient<NormalizedCacheObject>;
   patientRepository: PatientRepository;
+  deviceRepository: DeviceRepository;
   sessionLocalDataCleaner: SessionLocalDataCleaner;
   sessionRepository: SessionRepository;
   httpClient: HttpClient;
@@ -160,6 +167,13 @@ export class CoreContainer {
       this.apolloClient,
       this.patientRepository,
       tokenLocalDataSource,
+    );
+
+    const deviceIdDataSource: DeviceIdDataSource = deviceIdDataSourceImpl();
+    this.deviceRepository = deviceRepositoryImpl(
+      this.apolloClient,
+      deviceIdDataSource,
+      this.logger,
     );
   }
 }

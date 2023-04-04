@@ -27,6 +27,13 @@ export class NablaClient {
       throw new CurrentUserAlreadySetError(existingPatientId, patientId);
     }
     this.coreContainer.patientRepository.setPatientId(patientId);
+
+    if (existingPatientId !== patientId) {
+      this.coreContainer.deviceRepository.sendDeviceInfoAsync(
+        ["Messaging"],
+        patientId,
+      );
+    }
   };
 
   public clearCurrentUser = async () => {

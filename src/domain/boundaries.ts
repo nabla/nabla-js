@@ -11,6 +11,15 @@ export type PatientRepository = {
   clearPatientId(): void;
 };
 
+export type DeviceRepository = {
+  sendDeviceInfoAsync(
+    activeModules: ModuleType[],
+    userId: string,
+  ): Promise<void>;
+};
+
+export type ModuleType = "Messaging";
+
 export type SessionLocalDataCleaner = () => Promise<void>;
 
 export type SessionRepository = {
