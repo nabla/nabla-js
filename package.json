@@ -2,7 +2,7 @@
   "name": "@nabla/js",
   "private": true,
   "description": "The Nabla JS SDK makes it quick and easy to build an excellent healthcare communication experience in your web app.",
-  "version": "1.0.0-alpha01",
+  "version": "1.0.0-alpha02",
   "license": "MIT",
   "author": "Nabla",
   "type": "module",
