@@ -46,6 +46,7 @@ export type Conversation = {
   title?: string;
   inboxPreviewTitle: string;
   lastMessagePreview?: string;
+  lastMessage?: Message;
   lastModified: Date;
   patientUnreadMessageCount: number;
   pictureUrl?: string;

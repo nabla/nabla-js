@@ -86,7 +86,7 @@ const mapToMaybeProvider = (
   }
 };
 
-const mapToMessage = (
+export const mapToMessage = (
   fragment: MessageFragmentFragment,
 ): Message | undefined => {
   switch (fragment.messageContent.__typename) {

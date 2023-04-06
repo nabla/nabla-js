@@ -141,6 +141,9 @@ fragment ConversationFragment on Conversation {
   updatedAt
   inboxPreviewTitle
   lastMessagePreview
+  lastMessage {
+    ...MessageFragment
+  }
   unreadMessageCount
   providers {
     ...ProviderInConversationFragment

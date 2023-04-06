@@ -5,6 +5,7 @@ import {
 import { removeUndefined } from "./../../../helpers/arrayHelpers";
 import { Conversation, ProviderInConversation } from "./../../domain/entities";
 import { mapGqlProvider, mapGqlUuidToUUID, mapISOStringToDate } from "./common";
+import { mapToMessage } from "./conversationItemMappers";
 
 export const typingTimeWindowMs = 20_000;
 
@@ -15,6 +16,9 @@ export const mapToConversation = (
   title: fragment.title ?? undefined,
   inboxPreviewTitle: fragment.inboxPreviewTitle,
   lastMessagePreview: fragment.lastMessagePreview ?? undefined,
+  lastMessage: fragment.lastMessage
+    ? mapToMessage(fragment.lastMessage)
+    : undefined,
   lastModified: mapISOStringToDate(fragment.updatedAt),
   patientUnreadMessageCount: fragment.unreadMessageCount,
   pictureUrl: fragment.pictureUrl?.url,

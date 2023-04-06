@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - The SDK is now compatible with the conversation locking feature.
+- Added new `lastMessage` property on `Conversation` that gives access to the whole message and not just its preview.
 
 ## [1.0-alpha01] - 2023-03-17
 
