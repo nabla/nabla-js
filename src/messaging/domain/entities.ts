@@ -83,7 +83,8 @@ export type Message =
   | AudioMessage
   | DocumentMessage
   | DeletedMessage
-  | VideoCallRoom;
+  | VideoCallRoom
+  | QuestionsSetForm;
 
 export type BaseMessage = BaseConversationItem & {
   id: UUID;
@@ -169,6 +170,14 @@ export type VideoCallRoomStatusOpen = {
 export type VideoCallRoomStatusClosed = {
   kind: "closed";
 };
+
+export type QuestionsSetForm = BaseMessage & {
+  url: string;
+  state: QuestionsSetFormState;
+  kind: "questionsSetForm";
+};
+
+export type QuestionsSetFormState = "NOT_STARTED" | "IN_PROGRESS" | "ANSWERED";
 
 export type Size = {
   width: number;

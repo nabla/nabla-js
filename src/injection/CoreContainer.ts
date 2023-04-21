@@ -141,6 +141,7 @@ export class CoreContainer {
             "AudioMessageContent",
             "LivekitRoomMessageContent",
             "DeletedMessageContent",
+            "QuestionsSetFormMessageContent",
           ],
           MaybeProvider: ["Provider", "DeletedProvider"],
           ConversationActivityContent: [

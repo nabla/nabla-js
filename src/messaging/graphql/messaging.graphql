@@ -221,6 +221,13 @@ fragment LivekitRoomMessageContentFragment on LivekitRoomMessageContent {
   }
 }
 
+fragment QuestionsSetFormMessageContentFragment on QuestionsSetFormMessageContent {
+  form {
+    answerFormUrl
+    state
+  }
+}
+
 fragment MessageAuthorFragment on MessageAuthor {
   ... on Provider {
     ...ProviderFragment
@@ -269,6 +276,9 @@ fragment MessageContentFragment on MessageContent {
   }
   ... on LivekitRoomMessageContent {
     ...LivekitRoomMessageContentFragment
+  }
+  ... on QuestionsSetFormMessageContent {
+    ...QuestionsSetFormMessageContentFragment
   }
   ... on DeletedMessageContent {
     empty: _

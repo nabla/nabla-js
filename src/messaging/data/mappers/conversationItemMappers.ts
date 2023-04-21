@@ -166,6 +166,13 @@ export const mapToMessage = (
         },
         kind: "videoCallRoom",
       };
+    case "QuestionsSetFormMessageContent":
+      return {
+        ...mapToBaseMessage(fragment),
+        url: fragment.messageContent.form.answerFormUrl,
+        state: fragment.messageContent.form.state,
+        kind: "questionsSetForm",
+      };
   }
 };
 
