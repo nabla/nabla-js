@@ -162,6 +162,11 @@ export class CoreContainer {
           ],
         },
       }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: "cache-and-network",
+        },
+      },
     });
 
     this.sessionLocalDataCleaner = sessionLocalDataCleanerImpl(

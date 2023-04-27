@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Make sure new data is always fetched when recreating a `Watcher`.
+
 ### Added
 
 - Handle a new type of message: "QuestionsSetForm". Those are sets of questions sent by a Provider to a Patient that the Patient can answer by going to a specific URL.
