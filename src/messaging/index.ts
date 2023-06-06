@@ -20,6 +20,8 @@ export type {
   ProviderInConversation,
   ProviderJoinedConversationActivityContent,
   ProviderMessageAuthor,
+  QuestionsSetForm,
+  QuestionsSetFormState,
   Size,
   SystemMessageAuthor,
   TextMessage,

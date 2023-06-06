@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `QuestionsSetForm` and `QuestionsSetFormState` are now correctly exposed publicly.
+
 ## [1.0.0-alpha03] - 2023-04-27
 
 ### Fixed
