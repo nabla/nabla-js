@@ -2,7 +2,11 @@
 
 The [Nabla](https://www.nabla.com/) JS SDK makes it quick and easy to build an excellent healthcare communication experience in your web app.
 
-Right now the library is in alpha, meaning all core features are here and ready to be used but API might change during the journey to a stable 1.0 version.
+## ⚠️ End of support
+
+We took the decision to discontinue the Nabla Care Platform and with that stop maintaining the Nabla JS SDK.
+
+The Nabla Care Platform will remain operational until September 30th, 2024, but we would greatly appreciate it if you could transition before that date. We are committed to ensuring a seamless transition and are here to assist you in any way you need. You can fork this SDK repository if you want to modify it or reuse it with a different backend.
 
 ## Documentation
 
